@@ -12,4 +12,18 @@ To run:
 bun run index.ts
 ```
 
-This project was created using `bun init` in bun v1.1.36. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Telegram bot for image auto-tagging with following flow:
+1. Send image to running bot
+2. Bot finds image on danbooru via SauceNAO API
+3. Bot pulls character / artist tags
+4. Reposts image into specified channel with formatted tags
+
+## Required env format:
+```env
+BOT_TOKEN=
+TARGET_CHANNEL=
+SAUCENAO_API_KEY=
+AUTHOR_ID=
+```
+
+^ AUTHOR_ID is required for authorization and currently uses single user

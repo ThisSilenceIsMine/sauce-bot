@@ -5,6 +5,8 @@ import { fetchDanbooruTags } from './fetchDanbooruTags';
 import { type PostTags, type SauceNAOResponse } from './types';
 import { Readable } from 'node:stream';
 
+const MINIMUM_SIMILARITY = 70;
+
 export const queryImage = async (
   stream: Readable
 ): Promise<PostTags | null> => {
@@ -20,7 +22,7 @@ export const queryImage = async (
     output_type: '2',
     numres: '1',
     dbmask: '512',
-    minsim: '70',
+    minsim: MINIMUM_SIMILARITY.toString(),
     api_key: process.env.SAUCENAO_API_KEY ?? '',
   });
   const reqUrl = `https://saucenao.com/search.php?${query.toString()}`;
@@ -38,8 +40,18 @@ export const queryImage = async (
       return null;
     }
 
-    const result = results[0];
-    const danbooruUrl = result.data.ext_urls?.find((url: string) =>
+    const simMatch = results.filter(
+      (result) => parseFloat(result.header.similarity) >= MINIMUM_SIMILARITY
+    );
+
+    if (!simMatch.length) {
+      console.warn(
+        `SauceNAO didn't find image with similarity of ${MINIMUM_SIMILARITY} or above`
+      );
+      return null;
+    }
+
+    const danbooruUrl = simMatch[0].data.ext_urls?.find((url: string) =>
       url.includes('danbooru.donmai.us')
     );
 

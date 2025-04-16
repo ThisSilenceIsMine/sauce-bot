@@ -21,9 +21,7 @@ export const buildCaption = (postInfo: DanbooruPostInfo) => {
   if (postInfo.postUrl) {
     captionLines.push('');
     captionLines.push(
-      `[${escapeMarkdownV2(
-        'View on Danbooru'
-      )}](https://danbooru.donmai.us//posts//9161330)`
+      `[${escapeMarkdownV2('View on Danbooru')}](${postInfo.postUrl})`
     );
   }
 

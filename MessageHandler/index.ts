@@ -68,6 +68,7 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
     // Let user know it’s done
     bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
       parse_mode: 'Markdown',
+      disable_web_page_preview: true,
     });
 
     return;
@@ -107,6 +108,7 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
 
     await bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
       parse_mode: 'Markdown',
+      disable_web_page_preview: true,
     });
 
     return;

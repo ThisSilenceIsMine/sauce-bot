@@ -31,7 +31,10 @@ export const fetchDanbooruInfo = async (
     const { data } = await axios.get(apiUrl);
 
     // Prefer the original; fall back to the largest sample.
-    let imageUrl: string = data.file_url || data.large_file_url;
+    let imageUrl = [data.file_url, data.large_file_url].find(
+      (url: string | null) => url && url.endsWith('.jpg')
+    );
+    // let imageUrl: string = data.file_url || data.large_file_url;
     if (!imageUrl) {
       console.log('No suitable image URL found');
       return null;

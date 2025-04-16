@@ -42,7 +42,7 @@ export type SauceNAOResponse = {
   }[];
 };
 
-export type PostTags = {
+export type PostInfo = {
   characters: string[];
   authors: string[];
 };

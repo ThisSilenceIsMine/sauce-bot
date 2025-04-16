@@ -1,15 +1,15 @@
 import FormData from 'form-data';
 
 import axios from 'axios';
-import { fetchDanbooruTags } from './fetchDanbooruTags';
-import { type PostTags, type SauceNAOResponse } from './types';
 import { Readable } from 'node:stream';
+import type { SauceNAOResponse } from '../../types';
+import { fetchDanbooruInfo, type DanbooruPostInfo } from './fetchDanbooruInfo';
 
 const MINIMUM_SIMILARITY = 70;
 
 export const queryImage = async (
   stream: Readable
-): Promise<PostTags | null> => {
+): Promise<DanbooruPostInfo | null> => {
   // Prepare FormData
   const form = new FormData();
   form.append('file', stream, {
@@ -57,7 +57,7 @@ export const queryImage = async (
 
     if (!danbooruUrl) return null;
 
-    return await fetchDanbooruTags(danbooruUrl);
+    return await fetchDanbooruInfo(danbooruUrl);
   } catch (err) {
     console.warn('SauceNAO error:', err);
     return null;

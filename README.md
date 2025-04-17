@@ -18,7 +18,7 @@ bun start
 3. Bot pulls character / artist tags
 4. Reposts image into specified channel with formatted tags
 
-Bot can also operate on Danbooru posts via direct links, and if this is only intended use case, SauceNAO api key isn't required.
+The bot also accepts direct Danbooru post links; if you stick to links only, the SauceNAO API key is optional.
 
 ## Required env format:
 ```env
@@ -29,4 +29,9 @@ TARGET_CHANNEL=
 SAUCENAO_API_KEY=
 ```
 
-^ AUTHOR_ID is Telegram UserID required for authorization (currently only one user)
+`AUTHOR_ID` is the Telegram user ID allowed to use the bot (only one user for now).
+
+
+## Deployment
+
+Suggested deployment option is Docker since most hosting services can't run `bun` out of the box at all (and I CBA switching to node).

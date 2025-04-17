@@ -40,23 +40,24 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
 
     console.log(`Got file stream`);
 
-    const tags = await queryImage(fileStream);
+    const { postInfo, rateLimitInfo } = await queryImage(fileStream);
 
-    console.log('tags root', tags);
+    console.log('postInfo', postInfo);
+    console.log('rateLimitInfo', rateLimitInfo);
 
     const spoiler = msg.has_media_spoiler;
 
-    if (!tags) {
+    if (!postInfo) {
       await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileId, {
         has_spoiler: spoiler,
       });
 
-      bot.sendMessage(chatId, `Failed to tag, posted`);
+      bot.sendMessage(chatId, `Failed to tag, posted untagged`);
 
       return;
     }
 
-    const caption = buildCaption(tags);
+    const caption = buildCaption(postInfo);
     // Repost to target channel
 
     await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileId, {
@@ -70,6 +71,15 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
       parse_mode: 'Markdown',
       disable_web_page_preview: true,
     });
+
+    bot.sendMessage(
+      chatId,
+      [
+        'Rate limits (remaining/limit):',
+        `Short (30s): ${rateLimitInfo.shortRemaining}/${rateLimitInfo.shortLimit}`,
+        `Long (24h): ${rateLimitInfo.longRemaining}/${rateLimitInfo.longLimit}`,
+      ].join('\n')
+    );
 
     return;
   }

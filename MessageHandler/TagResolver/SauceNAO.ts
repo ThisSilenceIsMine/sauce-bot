@@ -7,9 +7,19 @@ import { fetchDanbooruInfo, type DanbooruPostInfo } from './fetchDanbooruInfo';
 
 const MINIMUM_SIMILARITY = 70;
 
-export const queryImage = async (
-  stream: Readable
-): Promise<DanbooruPostInfo | null> => {
+type RateLimitInfo = {
+  shortRemaining: number;
+  longRemaining: number;
+  shortLimit: number;
+  longLimit: number;
+};
+
+type Return = {
+  postInfo: DanbooruPostInfo | null;
+  rateLimitInfo: RateLimitInfo;
+};
+
+export const queryImage = async (stream: Readable): Promise<Return> => {
   // Prepare FormData
   const form = new FormData();
   form.append('file', stream, {
@@ -32,12 +42,28 @@ export const queryImage = async (
     headers: form.getHeaders(),
   });
 
+  // Log rate limit information
+  console.log('SauceNAO Rate Limits:', {
+    short: `${response.data.header.short_remaining}/${response.data.header.short_limit}`,
+    long: `${response.data.header.long_remaining}/${response.data.header.long_limit}`,
+  });
+
   const results = response.data.results;
+
+  const rateLimitInfo: RateLimitInfo = {
+    shortRemaining: response.data.header.short_remaining,
+    longRemaining: response.data.header.long_remaining,
+    shortLimit: parseInt(response.data.header.short_limit),
+    longLimit: parseInt(response.data.header.long_limit),
+  };
 
   try {
     if (!results?.length) {
       console.warn('SauceNAO returned no results');
-      return null;
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
     }
 
     const simMatch = results.filter(
@@ -48,18 +74,35 @@ export const queryImage = async (
       console.warn(
         `SauceNAO didn't find image with similarity of ${MINIMUM_SIMILARITY} or above`
       );
-      return null;
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
     }
 
     const danbooruUrl = simMatch[0].data.ext_urls?.find((url: string) =>
       url.includes('danbooru.donmai.us')
     );
 
-    if (!danbooruUrl) return null;
+    if (!danbooruUrl) {
+      console.warn("SauceNAO didn't find a Danbooru URL");
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
+    }
 
-    return await fetchDanbooruInfo(danbooruUrl);
+    const postInfo = await fetchDanbooruInfo(danbooruUrl);
+
+    return {
+      postInfo,
+      rateLimitInfo,
+    };
   } catch (err) {
     console.warn('SauceNAO error:', err);
-    return null;
+    return {
+      postInfo: null,
+      rateLimitInfo,
+    };
   }
 };

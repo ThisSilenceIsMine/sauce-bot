@@ -54,7 +54,7 @@ export const buildCaption = (postInfo: DanbooruPostInfo): string => {
     // Post link
     postInfo.postUrl ? createPostLink(postInfo.postUrl) : null,
   ]
-    .filter(Boolean) // Remove null/undefined values
+    .filter((line) => line != null) // Remove null/undefined values
     .join('\n');
 
   return captionParts;

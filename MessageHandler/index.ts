@@ -3,7 +3,7 @@ import type { Message } from 'node-telegram-bot-api';
 import { ContentType, getContentType } from './getContentType';
 import { queryImage } from './TagResolver/SauceNAO';
 import { fetchDanbooruInfo } from './TagResolver/fetchDanbooruInfo';
-import { fetchDanbooruImageUrl } from './TagResolver/fetchDanbooruImageURL';
+import { fetchDanbooruImageStream } from './TagResolver/fetchDanbooruImageURL';
 import { buildCaption } from './TagResolver/buildCaption';
 
 export const handleMessage = async (msg: Message, bot: TelegramBot) => {
@@ -65,7 +65,7 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
       parse_mode: 'Markdown',
     });
 
-    // Let user know it’s done
+    // Let user know it's done
     bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
       parse_mode: 'Markdown',
       disable_web_page_preview: true,
@@ -93,15 +93,17 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
 
     console.log('postInfo', postInfo);
 
-    if (!postInfo) {
-      await bot.sendMessage(chatId, 'Failed to fetch image URL');
+    const imageStream = await fetchDanbooruImageStream(danbooruUrl);
+
+    if (!imageStream) {
+      await bot.sendMessage(chatId, 'Failed to fetch image');
 
       return;
     }
 
     const caption = buildCaption(postInfo);
 
-    await bot.sendPhoto(process.env.TARGET_CHANNEL!, postInfo.imageUrl, {
+    await bot.sendPhoto(process.env.TARGET_CHANNEL!, imageStream, {
       caption,
       parse_mode: 'Markdown',
     });

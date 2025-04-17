@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Readable } from 'stream';
+import { resizeImageToTelegramLimit } from './resizeImage';
 
 /**
  * Grab the high‑res image URL (original if possible, otherwise "large" sample)
@@ -34,11 +35,9 @@ export const fetchDanbooruImageStream = async (
     if (imgUrl.startsWith('//')) imgUrl = `https:${imgUrl}`;
     if (imgUrl.startsWith('/')) imgUrl = `https://danbooru.donmai.us${imgUrl}`;
 
-    // Fetch the image as a stream
-    const response = await axios.get(imgUrl, { responseType: 'stream' });
-    const stream = response.data as Readable;
-
-    return stream;
+    // Fetch the image
+    const response = await axios.get(imgUrl, { responseType: 'arraybuffer' });
+    return await resizeImageToTelegramLimit(response.data);
   } catch (err) {
     console.log('Danbooru API error', err);
     return null;

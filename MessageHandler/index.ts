@@ -1,24 +1,26 @@
-import type TelegramBot from 'node-telegram-bot-api';
 import type { Message } from 'node-telegram-bot-api';
-import { ContentType, getContentType } from './getContentType';
-import { queryImage } from './TagResolver/SauceNAO';
-import { fetchDanbooruInfo } from './TagResolver/fetchDanbooruInfo';
-import { fetchDanbooruImageStream } from './TagResolver/fetchDanbooruImageURL';
-import { buildCaption } from './TagResolver/buildCaption';
+import type TelegramBot from 'node-telegram-bot-api';
+import { getContentType } from './getContentType';
+import { PhotoHandler } from './handlers/PhotoHandler';
+import { DanbooruHandler } from './handlers/DanbooruHandler';
+import type { PostResult } from './types';
 
-export const handleMessage = async (msg: Message, bot: TelegramBot) => {
+const handlers = [new PhotoHandler(), new DanbooruHandler()];
+
+export const handleMessage = async (
+  msg: Message,
+  bot: TelegramBot
+): Promise<PostResult> => {
   const chatId = msg.chat.id;
 
   if (String(msg.from?.id) !== process.env.AUTHOR_ID) {
     console.log('Not authorized', msg.from);
-
     return {
       error: 'Not authorized',
     };
   }
 
   const contentType = getContentType(msg);
-
   console.log('contentType', contentType);
 
   if (!contentType) {
@@ -27,102 +29,13 @@ export const handleMessage = async (msg: Message, bot: TelegramBot) => {
     };
   }
 
-  if (contentType === ContentType.PHOTO) {
-    const fileId = msg.photo?.at(-1)?.file_id;
+  const handler = handlers.find((h) => h.type === contentType);
 
-    if (!fileId) {
-      return {
-        error: 'Send me an image.',
-      };
-    }
-
-    const fileStream = bot.getFileStream(fileId);
-
-    console.log(`Got file stream`);
-
-    const { postInfo, rateLimitInfo } = await queryImage(fileStream);
-
-    console.log('postInfo', postInfo);
-    console.log('rateLimitInfo', rateLimitInfo);
-
-    const spoiler = msg.has_media_spoiler;
-
-    if (!postInfo) {
-      await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileId, {
-        has_spoiler: spoiler,
-      });
-
-      bot.sendMessage(chatId, `Failed to tag, posted untagged`);
-
-      return;
-    }
-
-    const caption = buildCaption(postInfo);
-    // Repost to target channel
-
-    await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileId, {
-      caption,
-      has_spoiler: spoiler,
-      parse_mode: 'Markdown',
-    });
-
-    // Let user know it's done
-    bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
-    });
-
-    bot.sendMessage(
-      chatId,
-      [
-        'Rate limits (remaining/limit):',
-        `Short (30s): ${rateLimitInfo.shortRemaining}/${rateLimitInfo.shortLimit}`,
-        `Long (24h): ${rateLimitInfo.longRemaining}/${rateLimitInfo.longLimit}`,
-      ].join('\n')
-    );
-
-    return;
+  if (!handler) {
+    return {
+      error: 'Unsupported content type',
+    };
   }
 
-  if (contentType === ContentType.DANBOORU) {
-    const danbooruUrl = msg.text;
-
-    if (!danbooruUrl) {
-      await bot.sendMessage(chatId, 'Send me a link to a danbooru post.');
-
-      return;
-    }
-
-    const postInfo = await fetchDanbooruInfo(danbooruUrl);
-
-    if (!postInfo) {
-      await bot.sendMessage(chatId, 'Failed to fetch tags');
-
-      return;
-    }
-
-    console.log('postInfo', postInfo);
-
-    const imageStream = await fetchDanbooruImageStream(danbooruUrl);
-
-    if (!imageStream) {
-      await bot.sendMessage(chatId, 'Failed to fetch image');
-
-      return;
-    }
-
-    const caption = buildCaption(postInfo);
-
-    await bot.sendPhoto(process.env.TARGET_CHANNEL!, imageStream, {
-      caption,
-      parse_mode: 'Markdown',
-    });
-
-    await bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
-    });
-
-    return;
-  }
+  return handler.handle(msg, bot);
 };

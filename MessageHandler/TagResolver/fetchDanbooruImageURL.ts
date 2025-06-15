@@ -39,7 +39,7 @@ export const fetchDanbooruImageStream = async (
     const response = await api.get(imgUrl, { responseType: 'arraybuffer' });
     return await resizeImageToTelegramLimit(response.data);
   } catch (err) {
-    console.log('Danbooru API error', err);
+    console.log('Danbooru API error');
     return null;
   }
 };

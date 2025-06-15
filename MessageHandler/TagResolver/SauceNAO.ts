@@ -38,6 +38,7 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
   const reqUrl = `https://saucenao.com/search.php?${query.toString()}`;
 
   // Send request
+  console.log('sending request to SauceNAO', reqUrl);
   const response = await api.post<SauceNAOResponse>(reqUrl, form, {
     headers: form.getHeaders(),
   });

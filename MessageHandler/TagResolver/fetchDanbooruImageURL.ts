@@ -19,6 +19,7 @@ export const fetchDanbooruImageStream = async (
   const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
 
   try {
+    console.log('fetching danbooru image stream', apiUrl);
     const { data } = await api.get(apiUrl);
 
     console.log('url-fetch data', data);
@@ -36,6 +37,7 @@ export const fetchDanbooruImageStream = async (
     if (imgUrl.startsWith('/')) imgUrl = `https://danbooru.donmai.us${imgUrl}`;
 
     // Fetch the image
+    console.log('fetching image', imgUrl);
     const response = await api.get(imgUrl, { responseType: 'arraybuffer' });
     return await resizeImageToTelegramLimit(response.data);
   } catch (err) {

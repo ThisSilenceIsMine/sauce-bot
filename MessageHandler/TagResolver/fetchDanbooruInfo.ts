@@ -28,6 +28,7 @@ export const fetchDanbooruInfo = async (
   const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
 
   try {
+    console.log('fetching danbooru info', apiUrl);
     const { data } = await api.get(apiUrl);
 
     // Prefer the original; fall back to the largest sample.

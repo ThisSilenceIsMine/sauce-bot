@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from '../api';
 
 export interface DanbooruPostInfo {
   authors: string[];
@@ -28,7 +28,7 @@ export const fetchDanbooruInfo = async (
   const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
 
   try {
-    const { data } = await axios.get(apiUrl);
+    const { data } = await api.get(apiUrl);
 
     // Prefer the original; fall back to the largest sample.
     let imageUrl = [data.file_url, data.large_file_url].find(

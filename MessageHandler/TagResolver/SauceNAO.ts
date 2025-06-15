@@ -1,6 +1,6 @@
 import FormData from 'form-data';
 
-import axios from 'axios';
+import { api } from '../api';
 import { Readable } from 'node:stream';
 import type { SauceNAOResponse } from '../../types';
 import { fetchDanbooruInfo, type DanbooruPostInfo } from './fetchDanbooruInfo';
@@ -38,7 +38,7 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
   const reqUrl = `https://saucenao.com/search.php?${query.toString()}`;
 
   // Send request
-  const response = await axios.post<SauceNAOResponse>(reqUrl, form, {
+  const response = await api.post<SauceNAOResponse>(reqUrl, form, {
     headers: form.getHeaders(),
   });
 

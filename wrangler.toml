@@ -1,0 +1,14 @@
+name = "tg-tagger"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "tg-tagger"
+
+[env.staging]
+name = "tg-tagger-staging"
+
+# Environment variables will be set via wrangler secret
+# wrangler secret put BOT_TOKEN
+# wrangler secret put AUTHOR_ID

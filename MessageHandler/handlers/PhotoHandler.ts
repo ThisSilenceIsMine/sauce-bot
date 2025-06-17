@@ -1,7 +1,7 @@
 import type { Message } from 'node-telegram-bot-api';
 import type TelegramBot from 'node-telegram-bot-api';
 import { ContentType } from '../getContentType';
-import { queryImage } from '../TagResolver/SauceNAO';
+import { queryImageFromUrl } from '../TagResolver/SauceNAO';
 import { buildCaption } from '../TagResolver/buildCaption';
 import type { ContentHandler, PostResult } from '../types';
 import {
@@ -23,10 +23,23 @@ export class PhotoHandler implements ContentHandler {
       };
     }
 
-    const fileStream = bot.getFileStream(fileId);
-    console.log(`Got file stream`);
+    // Get file URL from Telegram
+    const fileUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/getFile?file_id=${fileId}`;
+    const fileResponse = await fetch(fileUrl);
+    const fileData = await fileResponse.json();
 
-    const { postInfo, rateLimitInfo } = await queryImage(fileStream);
+    if (!fileData.ok || !fileData.result?.file_path) {
+      return {
+        error: 'Failed to get file information.',
+      };
+    }
+
+    const telegramFileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileData.result.file_path}`;
+    console.log(`Got file URL: ${telegramFileUrl}`);
+
+    const { postInfo, rateLimitInfo } = await queryImageFromUrl(
+      telegramFileUrl
+    );
     console.log('postInfo', postInfo);
     console.log('rateLimitInfo', rateLimitInfo);
 

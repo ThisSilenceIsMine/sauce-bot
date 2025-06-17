@@ -107,3 +107,99 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
     };
   }
 };
+
+export const queryImageFromUrl = async (imageUrl: string): Promise<Return> => {
+  // Build query
+  const query = new URLSearchParams({
+    output_type: '2',
+    numres: '1',
+    dbmask: '512',
+    minsim: MINIMUM_SIMILARITY.toString(),
+    api_key: process.env.SAUCENAO_API_KEY ?? '',
+    url: imageUrl,
+  });
+  const reqUrl = `https://saucenao.com/search.php?${query.toString()}`;
+
+  // Send request
+  console.log('sending request to SauceNAO', reqUrl);
+  const response = await fetch(reqUrl);
+
+  if (!response.ok) {
+    console.error('SauceNAO request failed:', response.statusText);
+    return {
+      postInfo: null,
+      rateLimitInfo: {
+        shortRemaining: 0,
+        longRemaining: 0,
+        shortLimit: 0,
+        longLimit: 0,
+      },
+    };
+  }
+
+  const data: SauceNAOResponse = await response.json();
+
+  // Log rate limit information
+  console.log('SauceNAO Rate Limits:', {
+    short: `${data.header.short_remaining}/${data.header.short_limit}`,
+    long: `${data.header.long_remaining}/${data.header.long_limit}`,
+  });
+
+  const results = data.results;
+
+  const rateLimitInfo: RateLimitInfo = {
+    shortRemaining: data.header.short_remaining,
+    longRemaining: data.header.long_remaining,
+    shortLimit: parseInt(data.header.short_limit),
+    longLimit: parseInt(data.header.long_limit),
+  };
+
+  try {
+    if (!results?.length) {
+      console.warn('SauceNAO returned no results');
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
+    }
+
+    const simMatch = results.filter(
+      (result) => parseFloat(result.header.similarity) >= MINIMUM_SIMILARITY
+    );
+
+    if (!simMatch.length) {
+      console.warn(
+        `SauceNAO didn't find image with similarity of ${MINIMUM_SIMILARITY} or above`
+      );
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
+    }
+
+    const danbooruUrl = simMatch[0].data.ext_urls?.find((url: string) =>
+      url.includes('danbooru.donmai.us')
+    );
+
+    if (!danbooruUrl) {
+      console.warn("SauceNAO didn't find a Danbooru URL");
+      return {
+        postInfo: null,
+        rateLimitInfo,
+      };
+    }
+
+    const postInfo = await fetchDanbooruInfo(danbooruUrl);
+
+    return {
+      postInfo,
+      rateLimitInfo,
+    };
+  } catch (err) {
+    console.warn('SauceNAO error:', err);
+    return {
+      postInfo: null,
+      rateLimitInfo,
+    };
+  }
+};

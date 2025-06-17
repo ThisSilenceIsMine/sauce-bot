@@ -1,14 +1,12 @@
 import { api } from '../api';
-import { Readable } from 'stream';
-import { resizeImageToTelegramLimit } from './resizeImage';
 
 /**
  * Grab the high‑res image URL (original if possible, otherwise "large" sample)
  * from a Danbooru post link.
  */
-export const fetchDanbooruImageStream = async (
+export const fetchDanbooruImageURL = async (
   url: string
-): Promise<Readable | null> => {
+): Promise<string | null> => {
   const match = url.match(/(?:posts|post\/show)\/(\d+)/);
   if (!match) {
     console.log('Invalid Danbooru post URL');
@@ -19,7 +17,7 @@ export const fetchDanbooruImageStream = async (
   const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
 
   try {
-    console.log('fetching danbooru image stream', apiUrl);
+    console.log('fetching danbooru image URL', apiUrl);
     const { data } = await api.get(apiUrl);
 
     console.log('url-fetch data', data);
@@ -36,12 +34,21 @@ export const fetchDanbooruImageStream = async (
     if (imgUrl.startsWith('//')) imgUrl = `https:${imgUrl}`;
     if (imgUrl.startsWith('/')) imgUrl = `https://danbooru.donmai.us${imgUrl}`;
 
-    // Fetch the image
-    console.log('fetching image', imgUrl);
-    const response = await api.get(imgUrl, { responseType: 'arraybuffer' });
-    return await resizeImageToTelegramLimit(response.data);
+    console.log('returning image URL', imgUrl);
+    return imgUrl;
   } catch (err) {
     console.log('Danbooru API error');
     return null;
   }
+};
+
+// Keep the old function for backward compatibility but mark as deprecated
+export const fetchDanbooruImageStream = async (
+  url: string
+): Promise<any | null> => {
+  console.warn(
+    'fetchDanbooruImageStream is deprecated, use fetchDanbooruImageURL instead'
+  );
+  const imageUrl = await fetchDanbooruImageURL(url);
+  return imageUrl ? { url: imageUrl } : null;
 };

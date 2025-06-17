@@ -2,7 +2,7 @@ import type { Message } from 'node-telegram-bot-api';
 import type TelegramBot from 'node-telegram-bot-api';
 import { ContentType } from '../getContentType';
 import { fetchDanbooruInfo } from '../TagResolver/fetchDanbooruInfo';
-import { fetchDanbooruImageStream } from '../TagResolver/fetchDanbooruImageURL';
+import { fetchDanbooruImageURL } from '../TagResolver/fetchDanbooruImageURL';
 import { buildCaption } from '../TagResolver/buildCaption';
 import type { ContentHandler, PostResult } from '../types';
 import { sendPostConfirmation } from '../utils';
@@ -28,16 +28,16 @@ export class DanbooruHandler implements ContentHandler {
 
     console.log('postInfo', postInfo);
 
-    const imageStream = await fetchDanbooruImageStream(danbooruUrl);
+    const imageUrl = await fetchDanbooruImageURL(danbooruUrl);
 
-    if (!imageStream) {
+    if (!imageUrl) {
       await bot.sendMessage(chatId, 'Failed to fetch image');
       return { error: 'Failed to fetch image' };
     }
 
     const caption = buildCaption(postInfo);
 
-    await bot.sendPhoto(process.env.TARGET_CHANNEL!, imageStream, {
+    await bot.sendPhoto(process.env.TARGET_CHANNEL!, imageUrl, {
       caption,
       parse_mode: 'Markdown',
     });

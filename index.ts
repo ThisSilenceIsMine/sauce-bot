@@ -13,7 +13,7 @@ if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
 
 // HTTP Server for health checks
 const server = Bun.serve({
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 8080,
   fetch(req) {
     const url = new URL(req.url);
 

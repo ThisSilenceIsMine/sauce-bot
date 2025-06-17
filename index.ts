@@ -11,6 +11,36 @@ const bot = new TelegramBot(process.env.BOT_TOKEN!, { polling: true });
 const downloadDir = path.resolve('./downloads');
 if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
 
+// HTTP Server for health checks
+const server = Bun.serve({
+  port: process.env.PORT || 3000,
+  fetch(req) {
+    const url = new URL(req.url);
+
+    if (url.pathname === '/health') {
+      return new Response(
+        JSON.stringify({
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          bot: {
+            isRunning: bot.isPolling(),
+          },
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
+    return new Response('Not Found', { status: 404 });
+  },
+});
+
+console.log(`HTTP server running on port ${server.port}`);
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
@@ -31,3 +61,5 @@ bot.on('message', async (msg) => {
     );
   }
 });
+
+console.log('Telegram bot started');

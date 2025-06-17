@@ -17,6 +17,8 @@ const server = Bun.serve({
   fetch(req) {
     const url = new URL(req.url);
 
+    console.log('Server request on ', url.pathname);
+
     if (url.pathname === '/health') {
       return new Response(
         JSON.stringify({

@@ -30,7 +30,8 @@ export class PhotoHandler implements ContentHandler {
     console.log('postInfo', postInfo);
     console.log('rateLimitInfo', rateLimitInfo);
 
-    const spoiler = msg.has_media_spoiler || postInfo?.rating !== 's';
+    const spoiler =
+      msg.has_media_spoiler || Boolean(postInfo && postInfo?.rating !== 's');
 
     if (!postInfo) {
       await postToChannel(bot, fileId, '', spoiler);

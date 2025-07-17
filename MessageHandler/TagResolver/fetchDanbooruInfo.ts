@@ -7,6 +7,8 @@ export interface DanbooruPostInfo {
   imageUrl: string;
   /** The URL of the post on Danbooru */
   postUrl: string;
+  /** Rating of the post (s, q, or e) */
+  rating: string;
 }
 
 const formatTag = (tags: string) =>
@@ -46,11 +48,26 @@ export const fetchDanbooruInfo = async (
     if (imageUrl.startsWith('/'))
       imageUrl = `https://danbooru.donmai.us${imageUrl}`;
 
+    // Extract rating with error handling
+    let rating = 's'; // Default to safe if rating is missing
+    try {
+      if (data.rating) {
+        rating = data.rating;
+      } else {
+        console.log(
+          `Warning: Missing rating for post ${postId}, defaulting to 's'`
+        );
+      }
+    } catch (error) {
+      console.error(`Error extracting rating for post ${postId}:`, error);
+    }
+
     return {
       authors: formatTag(data.tag_string_artist),
       characters: formatTag(data.tag_string_character),
       imageUrl,
       postUrl: `https://danbooru.donmai.us/posts/${postId}`,
+      rating,
     };
   } catch (err) {
     console.log('Danbooru API error:', err);

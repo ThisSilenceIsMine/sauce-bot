@@ -37,8 +37,30 @@ export class DanbooruHandler implements ContentHandler {
 
     const caption = buildCaption(postInfo);
 
-    // Check if the message has a spoiler flag
-    const spoiler = msg.has_media_spoiler;
+    // Check if the message has a spoiler flag or if the post has a NSFW rating
+    let spoiler = msg.has_media_spoiler;
+
+    try {
+      // Apply spoiler formatting for NSFW content (rating 'q' or 'e')
+      if (postInfo.rating) {
+        // If the post is already marked as spoiler by the user, keep it that way
+        // Otherwise, apply spoiler based on rating
+        if (!spoiler) {
+          spoiler = postInfo.rating === 'q' || postInfo.rating === 'e';
+        }
+      } else {
+        // Log missing rating information
+        console.log(
+          'Warning: Missing rating information for post',
+          postInfo.postUrl
+        );
+      }
+    } catch (error) {
+      // Log error in rating detection
+      console.error('Error detecting rating:', error);
+      // Default to non-spoiler formatting if rating detection fails
+      // (unless the user explicitly marked it as a spoiler)
+    }
 
     // Use the postToChannel utility for consistency with PhotoHandler
     await postToChannel(bot, imageStream, caption, spoiler);

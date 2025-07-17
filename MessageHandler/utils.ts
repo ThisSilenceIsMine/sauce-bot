@@ -1,5 +1,6 @@
 import type { Message } from 'node-telegram-bot-api';
 import type TelegramBot from 'node-telegram-bot-api';
+import { Readable } from 'stream';
 import { buildCaption } from './TagResolver/buildCaption';
 import type { PostInfo } from './types';
 
@@ -36,11 +37,11 @@ export const sendPostConfirmation = async (
 
 export const postToChannel = async (
   bot: TelegramBot,
-  fileId: string,
+  fileIdOrStream: string | Readable | Buffer,
   caption: string,
   hasSpoiler?: boolean
 ) => {
-  await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileId, {
+  await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileIdOrStream, {
     caption,
     has_spoiler: hasSpoiler,
     parse_mode: 'Markdown',

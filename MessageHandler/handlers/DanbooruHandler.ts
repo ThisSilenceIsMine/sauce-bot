@@ -5,7 +5,7 @@ import { fetchDanbooruInfo } from '../TagResolver/fetchDanbooruInfo';
 import { fetchDanbooruImageStream } from '../TagResolver/fetchDanbooruImageURL';
 import { buildCaption } from '../TagResolver/buildCaption';
 import type { ContentHandler, PostResult } from '../types';
-import { sendPostConfirmation } from '../utils';
+import { sendPostConfirmation, postToChannel } from '../utils';
 
 export class DanbooruHandler implements ContentHandler {
   type = ContentType.DANBOORU;
@@ -37,10 +37,11 @@ export class DanbooruHandler implements ContentHandler {
 
     const caption = buildCaption(postInfo);
 
-    await bot.sendPhoto(process.env.TARGET_CHANNEL!, imageStream, {
-      caption,
-      parse_mode: 'Markdown',
-    });
+    // Check if the message has a spoiler flag
+    const spoiler = msg.has_media_spoiler;
+
+    // Use the postToChannel utility for consistency with PhotoHandler
+    await postToChannel(bot, imageStream, caption, spoiler);
 
     await sendPostConfirmation(chatId, bot, caption);
 

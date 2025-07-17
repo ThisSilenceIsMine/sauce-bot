@@ -1,5 +1,7 @@
 import { api } from '../api';
 
+type PostRating = 's' | 'q' | 'e';
+
 export interface DanbooruPostInfo {
   authors: string[];
   characters: string[];
@@ -8,7 +10,7 @@ export interface DanbooruPostInfo {
   /** The URL of the post on Danbooru */
   postUrl: string;
   /** Rating of the post (s, q, or e) */
-  rating: string;
+  rating: PostRating;
 }
 
 const formatTag = (tags: string) =>
@@ -49,9 +51,9 @@ export const fetchDanbooruInfo = async (
       imageUrl = `https://danbooru.donmai.us${imageUrl}`;
 
     // Extract rating with error handling
-    let rating = 's'; // Default to safe if rating is missing
+    let rating: PostRating = 's'; // Default to safe if rating is missing
     try {
-      if (data.rating) {
+      if (data.rating && ['s', 'q', 'e'].includes(data.rating)) {
         rating = data.rating;
       } else {
         console.log(

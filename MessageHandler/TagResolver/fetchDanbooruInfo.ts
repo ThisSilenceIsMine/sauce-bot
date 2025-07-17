@@ -1,6 +1,13 @@
 import { api } from '../api';
 
-type PostRating = 's' | 'q' | 'e';
+export const PostRating = {
+  General: 'g',
+  Sensitive: 's',
+  Questionable: 'q',
+  Explicit: 'e',
+} as const;
+
+export type PostRating = (typeof PostRating)[keyof typeof PostRating];
 
 export interface DanbooruPostInfo {
   authors: string[];
@@ -9,9 +16,16 @@ export interface DanbooruPostInfo {
   imageUrl: string;
   /** The URL of the post on Danbooru */
   postUrl: string;
-  /** Rating of the post (s, q, or e) */
+  /** Rating of the post */
   rating: PostRating;
 }
+
+export const isNSFW = (rating?: PostRating) =>
+  rating
+    ? ([PostRating.Questionable, PostRating.Explicit] as PostRating[]).includes(
+        rating
+      )
+    : false;
 
 const formatTag = (tags: string) =>
   tags
@@ -51,9 +65,9 @@ export const fetchDanbooruInfo = async (
       imageUrl = `https://danbooru.donmai.us${imageUrl}`;
 
     // Extract rating with error handling
-    let rating: PostRating = 's'; // Default to safe if rating is missing
+    let rating: PostRating = PostRating.General; // Default to safe if rating is missing
     try {
-      if (data.rating && ['s', 'q', 'e'].includes(data.rating)) {
+      if (data.rating && Object.values(PostRating).includes(data.rating)) {
         rating = data.rating;
       } else {
         console.log(

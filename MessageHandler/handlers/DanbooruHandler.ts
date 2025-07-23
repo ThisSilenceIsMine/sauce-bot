@@ -22,17 +22,17 @@ export class DanbooruHandler implements ContentHandler {
     const postInfo = await fetchDanbooruInfo(danbooruUrl);
 
     if (!postInfo) {
-      await bot.sendMessage(chatId, 'Failed to fetch tags');
-      return { error: 'Failed to fetch tags' };
+      await bot.sendMessage(chatId, 'Failed to fetch post info');
+      return { error: 'Failed to fetch post info' };
     }
 
     console.log('postInfo', postInfo);
 
-    const imageStream = await fetchDanbooruImageStream(danbooruUrl);
+    const imageStream = await fetchDanbooruImageStream(postInfo.imageUrl);
 
     if (!imageStream) {
-      await bot.sendMessage(chatId, 'Failed to fetch image');
-      return { error: 'Failed to fetch image' };
+      await bot.sendMessage(chatId, 'Failed to create image stream');
+      return { error: 'Failed to create image stream' };
     }
 
     const caption = buildCaption(postInfo);

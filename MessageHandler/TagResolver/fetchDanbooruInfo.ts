@@ -1,13 +1,5 @@
 import { api } from '../api';
-
-export const PostRating = {
-  General: 'g',
-  Sensitive: 's',
-  Questionable: 'q',
-  Explicit: 'e',
-} as const;
-
-export type PostRating = (typeof PostRating)[keyof typeof PostRating];
+import { type DanbooruAPIPost, PostRating } from './types';
 
 export interface DanbooruPostInfo {
   authors: string[];
@@ -47,13 +39,17 @@ export const fetchDanbooruInfo = async (
 
   try {
     console.log('fetching danbooru info', apiUrl);
-    const { data } = await api.get(apiUrl);
+    const { data } = await api.get<DanbooruAPIPost>(apiUrl);
 
     // Prefer the original; fall back to the largest sample.
-    let imageUrl = [data.file_url, data.large_file_url].find(
-      (url: string | null) => url && url.endsWith('.jpg')
-    );
-    // let imageUrl: string = data.file_url || data.large_file_url;
+    let imageUrl = [
+      data.file_url,
+      data.large_file_url,
+      ...data.media_asset.variants
+        .filter((variant) => variant.type === 'original')
+        .map((variant) => variant.url),
+    ].find((url: string | null) => url);
+
     if (!imageUrl) {
       console.log('No suitable image URL found');
       return null;

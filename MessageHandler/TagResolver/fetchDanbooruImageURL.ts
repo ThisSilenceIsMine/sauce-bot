@@ -3,45 +3,52 @@ import { Readable } from 'stream';
 import { resizeImageToTelegramLimit } from './resizeImage';
 
 /**
- * Grab the high‑res image URL (original if possible, otherwise "large" sample)
- * from a Danbooru post link.
+ * Download an image from a URL and create a resized stream for Telegram.
+ * This function assumes the image URL has already been extracted from Danbooru API.
  */
 export const fetchDanbooruImageStream = async (
-  url: string
+  imageUrl: string
 ): Promise<Readable | null> => {
-  const match = url.match(/(?:posts|post\/show)\/(\d+)/);
-  if (!match) {
-    console.log('Invalid Danbooru post URL');
-    return null;
-  }
-
-  const postId = match[1];
-  const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
-
   try {
-    console.log('fetching danbooru image stream', apiUrl);
-    const { data } = await api.get(apiUrl);
+    console.log('Downloading image from URL:', imageUrl);
 
-    console.log('url-fetch data', data);
+    // Fetch the image
+    const response = await api.get(imageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 30000, // 30 second timeout
+      maxContentLength: 50 * 1024 * 1024, // 50MB max
+      maxBodyLength: 50 * 1024 * 1024, // 50MB max
+    });
 
-    // Prefer original; fall back to the biggest sample Danbooru gives us.
-    let imgUrl: string | undefined = data.file_url || data.large_file_url;
+    console.log('Image download completed:', {
+      status: response.status,
+      contentLength: response.headers['content-length'],
+      contentType: response.headers['content-type'],
+      bufferSize: response.data.length,
+    });
 
-    if (!imgUrl) {
-      console.log('No high-res URL found');
+    if (!response.data || response.data.length === 0) {
+      console.error('Downloaded image buffer is empty');
       return null;
     }
 
-    // Danbooru sometimes returns protocol‑relative ("//") or site‑relative ("/") paths.
-    if (imgUrl.startsWith('//')) imgUrl = `https:${imgUrl}`;
-    if (imgUrl.startsWith('/')) imgUrl = `https://danbooru.donmai.us${imgUrl}`;
+    console.log('Starting image resize process...');
+    const resizedStream = await resizeImageToTelegramLimit(response.data);
 
-    // Fetch the image
-    console.log('fetching image', imgUrl);
-    const response = await api.get(imgUrl, { responseType: 'arraybuffer' });
-    return await resizeImageToTelegramLimit(response.data);
+    if (!resizedStream) {
+      console.error('Failed to resize image to Telegram limit');
+      return null;
+    }
+
+    console.log('Image processing completed successfully');
+    return resizedStream;
   } catch (err) {
-    console.log('Danbooru API error');
+    console.error('Error in fetchDanbooruImageStream:', err);
+    console.error('Error details:', {
+      message: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      imageUrl: imageUrl,
+    });
     return null;
   }
 };

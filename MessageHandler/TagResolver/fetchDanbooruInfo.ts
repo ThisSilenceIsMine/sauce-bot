@@ -14,7 +14,7 @@ export interface DanbooruPostInfo {
 
 export const isNSFW = (rating?: PostRating) =>
   rating
-    ? ([PostRating.Questionable, PostRating.Explicit] as PostRating[]).includes(
+      ? ([PostRating.Questionable, PostRating.Explicit, PostRating.Sensitive] as PostRating[]).includes(
         rating
       )
     : false;

@@ -1,34 +1,28 @@
 import type { DanbooruPostInfo } from './fetchDanbooruInfo';
 
 /**
- * Sanitizes a tag to only contain letters, numbers, and underscores (Telegram hashtag requirement)
- * Replaces spaces and other invalid characters with underscores
+ * Characters that need to be escaped in Telegram's Markdown format:
+ * - _ * [ ] ( ) ~ ` > # + - = | { } ! \
  */
-const sanitizeTag = (tag: string): string => {
-  if (!tag || typeof tag !== 'string') {
-    return 'unknown';
-  }
-  
-  return tag
-    // Replace spaces and common separators with underscores
-    .replace(/[\s\-+.,:;/\\|]/g, '_')
-    // Remove all characters that aren't letters, numbers, or underscores
-    .replace(/[^a-zA-Z0-9_]/g, '')
-    // Remove consecutive underscores
-    .replace(/_+/g, '_')
-    // Remove leading/trailing underscores
-    .replace(/^_+|_+$/g, '')
-    // Ensure the tag isn't empty
-    || 'unknown';
-};
+const MARKDOWN_SPECIAL_CHARS = /([_*\[\]()~`>#+\-=|{}!\\])/g;
 
 /**
- * Formats a list of tags with proper sanitization for Telegram hashtags
+ * Escapes special characters for Telegram's Markdown format
+ */
+const escapeMarkdown = (text: string): string =>
+  text.replace(MARKDOWN_SPECIAL_CHARS, '\\$1');
+
+/**
+ * Sanitizes a tag by removing special characters that shouldn't be in tags
+ */
+const sanitizeTag = (tag: string): string => tag.replace(/[:=]/g, '');
+
+/**
+ * Formats a list of tags with proper escaping and sanitization
  */
 const formatTags = (tags: string[]): string =>
   tags
-    .map((tag) => `#${sanitizeTag(tag)}`)
-    .filter((tag) => tag !== '#unknown') // Filter out empty/invalid tags
+    .map((tag) => `\#${escapeMarkdown(sanitizeTag(tag))}`)
     .join(' ')
     .trim();
 
@@ -41,7 +35,7 @@ const cleanUrl = (url: string): string => url.replace(/([^:]\/)\/+/g, '$1');
  * Creates a formatted link to the Danbooru post
  */
 const createPostLink = (url: string): string =>
-  `[View on Danbooru](${cleanUrl(url)})`;
+  `[${escapeMarkdown('View on Danbooru')}](${cleanUrl(url)})`;
 
 /**
  * Builds a caption for a Danbooru post with proper formatting

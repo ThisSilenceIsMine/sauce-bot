@@ -1,11 +1,4 @@
-export const PostRating = {
-  General: 'g',
-  Sensitive: 's',
-  Questionable: 'q',
-  Explicit: 'e',
-} as const;
-
-export type PostRating = (typeof PostRating)[keyof typeof PostRating];
+import type { PostRating } from "../types";
 
 export interface DanbooruAPIPost {
   id: number;

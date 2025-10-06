@@ -1,11 +1,16 @@
-import type { Message } from 'node-telegram-bot-api';
-import type TelegramBot from 'node-telegram-bot-api';
-import { getContentType } from './getContentType';
-import { PhotoHandler } from './handlers/PhotoHandler';
-import { DanbooruHandler } from './handlers/DanbooruHandler';
-import type { PostResult } from './types';
+import type { Message } from "node-telegram-bot-api";
+import type TelegramBot from "node-telegram-bot-api";
+import { getContentType } from "./getContentType";
+import { PhotoHandler } from "./handlers/PhotoHandler";
+import { DanbooruHandler } from "./handlers/DanbooruHandler";
+import type { PostResult } from "./types";
+import { GelbooruHandler } from "./handlers/GelbooruHandler";
 
-const handlers = [new PhotoHandler(), new DanbooruHandler()];
+const handlers = [
+  new PhotoHandler(),
+  new DanbooruHandler(),
+  new GelbooruHandler(),
+];
 
 export const handleMessage = async (
   msg: Message,
@@ -14,18 +19,18 @@ export const handleMessage = async (
   const chatId = msg.chat.id;
 
   if (String(msg.from?.id) !== process.env.AUTHOR_ID) {
-    console.log('Not authorized', msg.from);
+    console.log("Not authorized", msg.from);
     return {
-      error: 'Not authorized',
+      error: "Not authorized",
     };
   }
 
   const contentType = getContentType(msg);
-  console.log('contentType', contentType);
+  console.log("contentType", contentType);
 
   if (!contentType) {
     return {
-      error: 'Send me an image or a link to a danbooru post.',
+      error: "Send me an image or a link to a danbooru post.",
     };
   }
 
@@ -33,7 +38,7 @@ export const handleMessage = async (
 
   if (!handler) {
     return {
-      error: 'Unsupported content type',
+      error: "Unsupported content type",
     };
   }
 

@@ -41,8 +41,3 @@ export type SauceNAOResponse = {
     };
   }[];
 };
-
-export type PostInfo = {
-  characters: string[];
-  authors: string[];
-};

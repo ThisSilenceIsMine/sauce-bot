@@ -1,13 +1,13 @@
 import type { Message } from "node-telegram-bot-api";
 import type TelegramBot from "node-telegram-bot-api";
 import { ContentType } from "../getContentType";
-import { fetchDanbooruInfo } from "../TagResolver/fetchDanbooruInfo";
-import { fetchImageStream } from "../TagResolver/fetchDanbooruImageURL";
+import { fetchGelbooruInfo } from "../TagResolver/Gelbooru/fetchGelbooruInfo";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
 import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";
+import { fetchImageStream } from "../TagResolver/fetchDanbooruImageURL";
 
-export class DanbooruHandler implements ContentHandler {
+export class GelbooruHandler implements ContentHandler {
   type = ContentType.DANBOORU;
 
   async handle(msg: Message, bot: TelegramBot): Promise<PostResult> {
@@ -19,14 +19,12 @@ export class DanbooruHandler implements ContentHandler {
       return { error: "No danbooru URL provided" };
     }
 
-    const postInfo = await fetchDanbooruInfo(danbooruUrl);
+    const postInfo = await fetchGelbooruInfo(danbooruUrl);
 
     if (!postInfo) {
       await bot.sendMessage(chatId, "Failed to fetch post info");
       return { error: "Failed to fetch post info" };
     }
-
-    console.log("postInfo", postInfo);
 
     const imageStream = await fetchImageStream(postInfo.imageUrl);
 

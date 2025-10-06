@@ -1,9 +1,11 @@
-import FormData from 'form-data';
+import FormData from "form-data";
 
-import { api } from '../api';
-import { Readable } from 'node:stream';
-import type { SauceNAOResponse } from '../../types';
-import { fetchDanbooruInfo, type DanbooruPostInfo } from './fetchDanbooruInfo';
+import { api } from "../api";
+import { Readable } from "node:stream";
+import type { SauceNAOResponse } from "../../types";
+import { fetchDanbooruInfo } from "./fetchDanbooruInfo";
+
+import type { PostInfo } from "../types";
 
 const MINIMUM_SIMILARITY = 70;
 
@@ -15,36 +17,36 @@ type RateLimitInfo = {
 };
 
 type Return = {
-  postInfo: DanbooruPostInfo | null;
+  postInfo: PostInfo | null;
   rateLimitInfo: RateLimitInfo;
 };
 
 export const queryImage = async (stream: Readable): Promise<Return> => {
   // Prepare FormData
   const form = new FormData();
-  form.append('file', stream, {
-    filename: 'image.png',
-    contentType: 'image/png',
+  form.append("file", stream, {
+    filename: "image.png",
+    contentType: "image/png",
   });
 
   // Build query
   const query = new URLSearchParams({
-    output_type: '2',
-    numres: '1',
-    dbmask: '512',
+    output_type: "2",
+    numres: "1",
+    dbmask: "512",
     minsim: MINIMUM_SIMILARITY.toString(),
-    api_key: process.env.SAUCENAO_API_KEY ?? '',
+    api_key: process.env.SAUCENAO_API_KEY ?? "",
   });
   const reqUrl = `https://saucenao.com/search.php?${query.toString()}`;
 
   // Send request
-  console.log('sending request to SauceNAO', reqUrl);
+  console.log("sending request to SauceNAO", reqUrl);
   const response = await api.post<SauceNAOResponse>(reqUrl, form, {
     headers: form.getHeaders(),
   });
 
   // Log rate limit information
-  console.log('SauceNAO Rate Limits:', {
+  console.log("SauceNAO Rate Limits:", {
     short: `${response.data.header.short_remaining}/${response.data.header.short_limit}`,
     long: `${response.data.header.long_remaining}/${response.data.header.long_limit}`,
   });
@@ -60,7 +62,7 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
 
   try {
     if (!results?.length) {
-      console.warn('SauceNAO returned no results');
+      console.warn("SauceNAO returned no results");
       return {
         postInfo: null,
         rateLimitInfo,
@@ -82,7 +84,7 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
     }
 
     const danbooruUrl = simMatch[0].data.ext_urls?.find((url: string) =>
-      url.includes('danbooru.donmai.us')
+      url.includes("danbooru.donmai.us")
     );
 
     if (!danbooruUrl) {
@@ -100,7 +102,7 @@ export const queryImage = async (stream: Readable): Promise<Return> => {
       rateLimitInfo,
     };
   } catch (err) {
-    console.warn('SauceNAO error:', err);
+    console.warn("SauceNAO error:", err);
     return {
       postInfo: null,
       rateLimitInfo,

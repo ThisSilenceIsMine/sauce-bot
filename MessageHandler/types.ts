@@ -1,6 +1,14 @@
-import type { Message } from 'node-telegram-bot-api';
-import type TelegramBot from 'node-telegram-bot-api';
-import type { ContentType } from './getContentType';
+import type { Message } from "node-telegram-bot-api";
+import type TelegramBot from "node-telegram-bot-api";
+import type { ContentType } from "./getContentType";
+export const PostRating = {
+  General: "g",
+  Sensitive: "s",
+  Questionable: "q",
+  Explicit: "e",
+} as const;
+
+export type PostRating = (typeof PostRating)[keyof typeof PostRating];
 
 export interface PostResult {
   error?: string;
@@ -15,10 +23,14 @@ export interface RateLimitInfo {
 }
 
 export interface PostInfo {
-  tags: string[];
-  source?: string;
-  artist?: string;
-  rating?: string;
+  authors: string[];
+  characters: string[];
+  /** Highest‑res image URL available (original if possible) */
+  imageUrl: string;
+  /** The URL of the post on Danbooru */
+  postUrl: string;
+  /** Rating of the post */
+  rating: PostRating;
 }
 
 export interface MessageHandler {

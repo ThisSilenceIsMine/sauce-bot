@@ -1,15 +1,15 @@
-import type { Message } from 'node-telegram-bot-api';
-import type TelegramBot from 'node-telegram-bot-api';
-import { ContentType } from '../getContentType';
-import { queryImage } from '../TagResolver/SauceNAO';
-import { buildCaption } from '../TagResolver/buildCaption';
-import type { ContentHandler, PostResult } from '../types';
+import type { Message } from "node-telegram-bot-api";
+import type TelegramBot from "node-telegram-bot-api";
+import { ContentType } from "../getContentType";
+import { queryImage } from "../TagResolver/SauceNAO";
+import { buildCaption } from "../TagResolver/buildCaption";
+import type { ContentHandler, PostResult } from "../types";
 import {
   sendRateLimitInfo,
   sendPostConfirmation,
   postToChannel,
-} from '../utils';
-import { isNSFW, PostRating } from '../TagResolver/fetchDanbooruInfo';
+  isNSFW,
+} from "../utils";
 
 export class PhotoHandler implements ContentHandler {
   type = ContentType.PHOTO;
@@ -20,7 +20,7 @@ export class PhotoHandler implements ContentHandler {
 
     if (!fileId) {
       return {
-        error: 'Send me an image.',
+        error: "Send me an image.",
       };
     }
 
@@ -28,13 +28,13 @@ export class PhotoHandler implements ContentHandler {
     console.log(`Got file stream`);
 
     const { postInfo, rateLimitInfo } = await queryImage(fileStream);
-    console.log('postInfo', postInfo);
-    console.log('rateLimitInfo', rateLimitInfo);
+    console.log("postInfo", postInfo);
+    console.log("rateLimitInfo", rateLimitInfo);
 
     const spoiler = msg.has_media_spoiler || isNSFW(postInfo?.rating);
 
     if (!postInfo) {
-      await postToChannel(bot, fileId, '', spoiler);
+      await postToChannel(bot, fileId, "", spoiler);
       await bot.sendMessage(chatId, `Failed to tag, posted untagged`);
       return { success: true };
     }

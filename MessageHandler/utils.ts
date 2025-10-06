@@ -1,8 +1,6 @@
-import type { Message } from 'node-telegram-bot-api';
-import type TelegramBot from 'node-telegram-bot-api';
-import { Readable } from 'stream';
-import { buildCaption } from './TagResolver/buildCaption';
-import type { PostInfo } from './types';
+import type TelegramBot from "node-telegram-bot-api";
+import { Readable } from "stream";
+import { PostRating } from "./types";
 
 export const sendRateLimitInfo = async (
   chatId: number,
@@ -17,10 +15,10 @@ export const sendRateLimitInfo = async (
   await bot.sendMessage(
     chatId,
     [
-      'Rate limits (remaining/limit):',
+      "Rate limits (remaining/limit):",
       `Short (30s): ${rateLimitInfo.shortRemaining}/${rateLimitInfo.shortLimit}`,
       `Long (24h): ${rateLimitInfo.longRemaining}/${rateLimitInfo.longLimit}`,
-    ].join('\n')
+    ].join("\n")
   );
 };
 
@@ -30,7 +28,7 @@ export const sendPostConfirmation = async (
   caption: string
 ) => {
   await bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
-    parse_mode: 'Markdown',
+    parse_mode: "Markdown",
     disable_web_page_preview: true,
   });
 };
@@ -44,6 +42,17 @@ export const postToChannel = async (
   await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileIdOrStream, {
     caption,
     has_spoiler: hasSpoiler,
-    parse_mode: 'Markdown',
+    parse_mode: "Markdown",
   });
 };
+
+export const isNSFW = (rating?: PostRating) =>
+  rating
+    ? (
+        [
+          PostRating.Questionable,
+          PostRating.Explicit,
+          PostRating.Sensitive,
+        ] as PostRating[]
+      ).includes(rating)
+    : false;

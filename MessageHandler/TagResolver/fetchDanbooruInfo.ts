@@ -1,36 +1,20 @@
-import { api } from '../api';
-import { type DanbooruAPIPost, PostRating } from './types';
-
-export interface DanbooruPostInfo {
-  authors: string[];
-  characters: string[];
-  /** Highest‑res image URL available (original if possible) */
-  imageUrl: string;
-  /** The URL of the post on Danbooru */
-  postUrl: string;
-  /** Rating of the post */
-  rating: PostRating;
-}
-
-export const isNSFW = (rating?: PostRating) =>
-  rating
-      ? ([PostRating.Questionable, PostRating.Explicit, PostRating.Sensitive] as PostRating[]).includes(
-        rating
-      )
-    : false;
+import { api } from "../api";
+import type { PostInfo } from "../types";
+import { PostRating } from "../types";
+import { type DanbooruAPIPost } from "./types";
 
 const formatTag = (tags: string) =>
   tags
-    .split(' ')
-    .map((tag) => tag.replace(/[()']/g, '').trim())
+    .split(" ")
+    .map((tag) => tag.replace(/[()']/g, "").trim())
     .filter(Boolean);
 
 export const fetchDanbooruInfo = async (
   url: string
-): Promise<DanbooruPostInfo | null> => {
+): Promise<PostInfo | null> => {
   const match = url.match(/(?:posts|post\/show)\/(\d+)/);
   if (!match) {
-    console.log('Invalid Danbooru post URL');
+    console.log("Invalid Danbooru post URL");
     return null;
   }
 
@@ -38,7 +22,7 @@ export const fetchDanbooruInfo = async (
   const apiUrl = `https://danbooru.donmai.us/posts/${postId}.json`;
 
   try {
-    console.log('fetching danbooru info', apiUrl);
+    console.log("fetching danbooru info", apiUrl);
     const { data } = await api.get<DanbooruAPIPost>(apiUrl);
 
     // Prefer the original; fall back to the largest sample.
@@ -46,18 +30,18 @@ export const fetchDanbooruInfo = async (
       data.file_url,
       data.large_file_url,
       ...data.media_asset.variants
-        .filter((variant) => variant.type === 'original')
+        .filter((variant) => variant.type === "original")
         .map((variant) => variant.url),
     ].find((url: string | null) => url);
 
     if (!imageUrl) {
-      console.log('No suitable image URL found');
+      console.log("No suitable image URL found");
       return null;
     }
 
     // Normalise protocol‑relative/relative paths
-    if (imageUrl.startsWith('//')) imageUrl = `https:${imageUrl}`;
-    if (imageUrl.startsWith('/'))
+    if (imageUrl.startsWith("//")) imageUrl = `https:${imageUrl}`;
+    if (imageUrl.startsWith("/"))
       imageUrl = `https://danbooru.donmai.us${imageUrl}`;
 
     // Extract rating with error handling
@@ -82,7 +66,7 @@ export const fetchDanbooruInfo = async (
       rating,
     };
   } catch (err) {
-    console.log('Danbooru API error:', err);
+    console.log("Danbooru API error:", err);
     return null;
   }
 };

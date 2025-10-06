@@ -1,4 +1,4 @@
-import type { DanbooruPostInfo } from "./fetchDanbooruInfo";
+import type { PostInfo } from "../types";
 
 /**
  * Characters that need to be escaped in Telegram's Markdown format:
@@ -41,7 +41,7 @@ const createPostLink = (url: string): string =>
 /**
  * Builds a caption for a Danbooru post with proper formatting
  */
-export const buildCaption = (postInfo: DanbooruPostInfo): string => {
+export const buildCaption = (postInfo: PostInfo): string => {
   const captionParts = [
     // Character tags
     postInfo?.characters?.length ? formatTags(postInfo.characters) : null,

@@ -8,7 +8,7 @@ import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";
 import { fetchImageStream } from "../TagResolver/fetchDanbooruImageURL";
 
 export class GelbooruHandler implements ContentHandler {
-  type = ContentType.DANBOORU;
+  type = ContentType.GELBOORU;
 
   async handle(msg: Message, bot: TelegramBot): Promise<PostResult> {
     const chatId = msg.chat.id;

@@ -1,7 +1,7 @@
 import api from "axios";
 import type { PostInfo } from "../../types";
 import type { GelbooruAPIPost, Tag } from "./types";
-
+import { formatSingleTag } from "../../utils";
 const BASE_URL = "https://gelbooru.com/index.php";
 const GELBOORU_API_KEY = process.env.GELBOORU_API_KEY;
 const GELBOORU_UID = process.env.GELBOORU_UID;
@@ -30,9 +30,9 @@ export const findTags = async (tags: string[]): Promise<TagResponse | null> => {
   return {
     artistTags: rawTags
       .filter((tag) => tag.type === ARTIST_TAG_TYPE)
-      .map((tag) => tag.name),
+      .map((tag) => formatSingleTag(tag.name)),
     characterTags: rawTags
       .filter((tag) => tag.type === CHARACTER_TAG_TYPE)
-      .map((tag) => tag.name),
+      .map((tag) => formatSingleTag(tag.name)),
   };
 };

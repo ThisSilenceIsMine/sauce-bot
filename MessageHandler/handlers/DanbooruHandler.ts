@@ -37,6 +37,8 @@ export class DanbooruHandler implements ContentHandler {
 
     const caption = buildCaption(postInfo);
 
+    console.log("Danbooru caption, postInfo", caption, postInfo);
+
     // Check if the message has a spoiler flag or if the post has a NSFW rating
     let spoiler = msg.has_media_spoiler || isNSFW(postInfo.rating);
 

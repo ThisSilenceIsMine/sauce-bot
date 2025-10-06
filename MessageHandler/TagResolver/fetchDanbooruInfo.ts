@@ -1,13 +1,8 @@
 import { api } from "../api";
 import type { PostInfo } from "../types";
 import { PostRating } from "../types";
+import { formatTags } from "../utils";
 import { type DanbooruAPIPost } from "./types";
-
-const formatTag = (tags: string) =>
-  tags
-    .split(" ")
-    .map((tag) => tag.replace(/[()']/g, "").trim())
-    .filter(Boolean);
 
 export const fetchDanbooruInfo = async (
   url: string
@@ -59,8 +54,8 @@ export const fetchDanbooruInfo = async (
     }
 
     return {
-      authors: formatTag(data.tag_string_artist),
-      characters: formatTag(data.tag_string_character),
+      authors: formatTags(data.tag_string_artist),
+      characters: formatTags(data.tag_string_character),
       imageUrl,
       postUrl: `https://danbooru.donmai.us/posts/${postId}`,
       rating,

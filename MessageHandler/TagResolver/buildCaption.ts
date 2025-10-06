@@ -36,10 +36,10 @@ const cleanUrl = (url: string): string => url.replace(/([^:]\/)\/+/g, "$1");
  * Creates a formatted link to the Danbooru post
  */
 const createPostLink = (url: string): string =>
-  `[${escapeMarkdown("View on Danbooru")}](${cleanUrl(url)})`;
+  `[${escapeMarkdown("View on Booru")}](${cleanUrl(url)})`;
 
 /**
- * Builds a caption for a Danbooru post with proper formatting
+ * Builds a caption for a Booru post with proper formatting
  */
 export const buildCaption = (postInfo: PostInfo): string => {
   const captionParts = [

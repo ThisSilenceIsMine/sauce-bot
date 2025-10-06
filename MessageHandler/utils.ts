@@ -56,3 +56,12 @@ export const isNSFW = (rating?: PostRating) =>
         ] as PostRating[]
       ).includes(rating)
     : false;
+
+export const formatSingleTag = (tag: string) =>
+  tag.replace(/[()']/g, "").trim();
+
+export const formatTags = (tags: string) =>
+  tags
+    .split(" ")
+    .map((tag) => formatSingleTag(tag))
+    .filter(Boolean);

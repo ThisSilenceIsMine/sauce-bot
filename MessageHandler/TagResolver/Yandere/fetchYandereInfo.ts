@@ -1,6 +1,7 @@
 import { api } from "../../api";
 import type { PostInfo } from "../../types";
 import { PostRating } from "../../types";
+import { formatSingleTag } from "../../utils";
 import { TagType, type Response } from "./types";
 
 const BASE_URL = "https://yande.re";
@@ -38,12 +39,12 @@ export const fetchYandereInfo = async (
 
     const tagsInfo = data.tags;
 
-    const authors = Object.keys(tagsInfo).filter(
-      (tag) => tagsInfo[tag] === TagType.ARTIST
-    );
-    const characters = Object.keys(tagsInfo).filter(
-      (tag) => tagsInfo[tag] === TagType.CHARACTER
-    );
+    const authors = Object.keys(tagsInfo)
+      .filter((tag) => tagsInfo[tag] === TagType.ARTIST)
+      .map((tag) => formatSingleTag(tag));
+    const characters = Object.keys(tagsInfo)
+      .filter((tag) => tagsInfo[tag] === TagType.CHARACTER)
+      .map((tag) => formatSingleTag(tag));
 
     const postInfo: PostInfo = {
       postUrl: `https://yande.re/post/show/${postId}`,

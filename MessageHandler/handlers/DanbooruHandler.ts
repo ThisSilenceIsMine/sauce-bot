@@ -1,8 +1,8 @@
 import type { Message } from "node-telegram-bot-api";
 import type TelegramBot from "node-telegram-bot-api";
 import { ContentType } from "../getContentType";
-import { fetchDanbooruInfo } from "../TagResolver/fetchDanbooruInfo";
-import { fetchImageStream } from "../TagResolver/fetchDanbooruImageURL";
+import { fetchDanbooruInfo } from "../TagResolver/Danbooru/fetchDanbooruInfo";
+import { fetchImageStream } from "../TagResolver/Danbooru/fetchDanbooruImageURL";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
 import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";

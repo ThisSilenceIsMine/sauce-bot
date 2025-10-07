@@ -5,7 +5,7 @@ import { fetchGelbooruInfo } from "../TagResolver/Gelbooru/fetchGelbooruInfo";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
 import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";
-import { fetchImageStream } from "../TagResolver/fetchDanbooruImageURL";
+import { fetchImageStream } from "../TagResolver/Danbooru/fetchDanbooruImageURL";
 
 export class GelbooruHandler implements ContentHandler {
   type = ContentType.GELBOORU;

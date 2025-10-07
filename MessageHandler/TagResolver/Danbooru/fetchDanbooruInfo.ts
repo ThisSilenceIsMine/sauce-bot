@@ -1,7 +1,7 @@
-import { api } from "../api";
-import type { PostInfo } from "../types";
-import { PostRating } from "../types";
-import { formatTags } from "../utils";
+import { api } from "../../api";
+import type { PostInfo } from "../../types";
+import { PostRating } from "../../types";
+import { formatTags } from "../../utils";
 import { type DanbooruAPIPost } from "./types";
 
 export const fetchDanbooruInfo = async (

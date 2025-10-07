@@ -1,4 +1,4 @@
-import type { PostRating } from "../types";
+import type { PostRating } from "../../types";
 
 export interface DanbooruAPIPost {
   id: number;

@@ -3,7 +3,7 @@ import FormData from "form-data";
 import { api } from "../api";
 import { Readable } from "node:stream";
 import type { SauceNAOResponse } from "../../types";
-import { fetchDanbooruInfo } from "./fetchDanbooruInfo";
+import { fetchDanbooruInfo } from "./Danbooru/fetchDanbooruInfo";
 
 import type { PostInfo } from "../types";
 

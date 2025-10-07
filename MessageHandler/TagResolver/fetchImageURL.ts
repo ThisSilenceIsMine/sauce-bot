@@ -1,6 +1,6 @@
-import { api } from "../../api";
+import { api } from "../api";
 import { Readable } from "stream";
-import { resizeImageToTelegramLimit } from "../resizeImage";
+import { resizeImageToTelegramLimit } from "./resizeImage";
 
 /**
  * Download an image from a URL and create a resized stream for Telegram.

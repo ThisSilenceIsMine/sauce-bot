@@ -48,13 +48,9 @@ export const postToChannel = async (
 
 export const isNSFW = (rating?: PostRating) =>
   rating
-    ? (
-        [
-          PostRating.Questionable,
-          PostRating.Explicit,
-          PostRating.Sensitive,
-        ] as PostRating[]
-      ).includes(rating)
+    ? ([PostRating.Questionable, PostRating.Explicit] as PostRating[]).includes(
+        rating
+      )
     : false;
 
 export const formatSingleTag = (tag: string) =>

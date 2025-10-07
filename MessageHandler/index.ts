@@ -5,11 +5,13 @@ import { PhotoHandler } from "./handlers/PhotoHandler";
 import { DanbooruHandler } from "./handlers/DanbooruHandler";
 import type { PostResult } from "./types";
 import { GelbooruHandler } from "./handlers/GelbooruHandler";
+import { YandereHandler } from "./handlers/YandereHandler";
 
 const handlers = [
   new PhotoHandler(),
   new DanbooruHandler(),
   new GelbooruHandler(),
+  new YandereHandler(),
 ];
 
 export const handleMessage = async (

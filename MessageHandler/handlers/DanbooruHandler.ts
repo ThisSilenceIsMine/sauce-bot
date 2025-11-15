@@ -5,7 +5,11 @@ import { fetchDanbooruInfo } from "../TagResolver/Danbooru/fetchDanbooruInfo";
 import { fetchImageStream } from "../TagResolver/fetchImageURL";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
-import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";
+import {
+  sendPostConfirmation,
+  postToChannel,
+  shouldMarkAsSpoiler,
+} from "../utils";
 
 export class DanbooruHandler implements ContentHandler {
   type = ContentType.DANBOORU;
@@ -40,7 +44,7 @@ export class DanbooruHandler implements ContentHandler {
     console.log("Danbooru caption, postInfo", caption, postInfo);
 
     // Check if the message has a spoiler flag or if the post has a NSFW rating
-    let spoiler = msg.has_media_spoiler || isNSFW(postInfo.rating);
+    let spoiler = shouldMarkAsSpoiler(msg.has_media_spoiler, postInfo.rating);
 
     await postToChannel(bot, imageStream, caption, spoiler);
 

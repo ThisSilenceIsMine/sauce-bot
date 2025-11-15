@@ -8,7 +8,7 @@ A Telegram bot for automatically tagging and reposting images to channels. The b
 - **Direct Link Support**: Accept direct links from Danbooru, Gelbooru, and Yandere image boards
 - **Automatic Tag Extraction**: Pulls character, artist, and other metadata tags from image boards
 - **Formatted Captions**: Creates nicely formatted captions with tags for reposting
-- **NSFW Detection**: Automatically marks NSFW content as spoilers
+- **NSFW Detection**: Automatically marks NSFW content as spoilers (can be disabled via environment variable)
 - **Multiple Image Sources**: Supports Danbooru, Gelbooru, and Yandere
 
 ## Prerequisites
@@ -44,6 +44,9 @@ SAUCENAO_API_KEY=your_saucenao_api_key
 # Optional - for Gelbooru link support
 GELBOORU_API_KEY=your_gelbooru_api_key
 GELBOORU_UID=your_gelbooru_user_id
+
+# Optional - disable automatic NSFW spoiler marking
+DISABLE_CENSOR=false
 ```
 
 ### Running Locally
@@ -115,9 +118,10 @@ The bot will:
 
 ### NSFW Content
 
-- Images with NSFW ratings are automatically marked as spoilers
+- Images with NSFW ratings are automatically marked as spoilers (unless censorship is disabled)
 - You can also manually mark images as spoilers when sending them to the bot
 - The bot respects both manual spoiler flags and automatic NSFW detection
+- To disable automatic NSFW spoiler marking, set `DISABLE_CENSOR=true` in your environment variables
 
 ## Supported Content Types
 
@@ -140,6 +144,7 @@ The bot supports the following content types:
 | `GELBOORU_API_KEY` | No | Gelbooru API key (required for Gelbooru link support) |
 | `GELBOORU_UID` | No | Gelbooru user ID (required for Gelbooru link support) |
 | `PORT` | No | Port for health check HTTP server (default: `8080`) |
+| `DISABLE_CENSOR` | No | Set to `true` to disable automatic NSFW spoiler marking (manual spoiler flags still work) |
 
 ## Deployment
 

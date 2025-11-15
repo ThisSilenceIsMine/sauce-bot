@@ -3,7 +3,11 @@ import type TelegramBot from "node-telegram-bot-api";
 import { ContentType } from "../getContentType";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
-import { sendPostConfirmation, postToChannel, isNSFW } from "../utils";
+import {
+  sendPostConfirmation,
+  postToChannel,
+  shouldMarkAsSpoiler,
+} from "../utils";
 import { fetchImageStream } from "../TagResolver/fetchImageURL";
 import { fetchYandereInfo } from "../TagResolver/Yandere/fetchYandereInfo";
 
@@ -45,7 +49,7 @@ export class YandereHandler implements ContentHandler {
     console.log("caption", caption);
 
     // Check if the message has a spoiler flag or if the post has a NSFW rating
-    let spoiler = msg.has_media_spoiler || isNSFW(postInfo.rating);
+    let spoiler = shouldMarkAsSpoiler(msg.has_media_spoiler, postInfo.rating);
 
     await postToChannel(bot, imageStream, caption, spoiler);
 

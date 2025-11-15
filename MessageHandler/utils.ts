@@ -53,6 +53,33 @@ export const isNSFW = (rating?: PostRating) =>
       )
     : false;
 
+/**
+ * Checks if censorship is enabled
+ * Censorship is disabled when DISABLE_CENSOR env var is set to a truthy value
+ */
+export const isCensorshipEnabled = (): boolean => {
+  return !process.env.DISABLE_CENSOR;
+};
+
+/**
+ * Determines if content should be marked as spoiler
+ * Respects manual spoiler flags and NSFW rating (if censorship is enabled)
+ */
+export const shouldMarkAsSpoiler = (
+  hasMediaSpoiler: boolean | undefined,
+  rating?: PostRating
+): boolean => {
+  // Always respect manual spoiler flag
+  if (hasMediaSpoiler) {
+    return true;
+  }
+  // Only apply NSFW spoiler if censorship is enabled
+  if (isCensorshipEnabled() && isNSFW(rating)) {
+    return true;
+  }
+  return false;
+};
+
 export const formatSingleTag = (tag: string) =>
   tag.replace(/[()']/g, "").trim();
 

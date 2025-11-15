@@ -7,9 +7,9 @@ const GELBOORU_API_KEY = process.env.GELBOORU_API_KEY;
 const GELBOORU_UID = process.env.GELBOORU_UID;
 
 const transformTagsToAPICall = (tags: string[]) => {
-  return `${BASE_URL}?page=dapi&s=tag&q=index&names=${tags.join(
-    " "
-  )}&json=1&api_key=${GELBOORU_API_KEY}&user_id=${GELBOORU_UID}`;
+  // Encode each tag to handle special characters like apostrophes
+  const encodedTags = tags.map((tag) => encodeURIComponent(tag)).join(" ");
+  return `${BASE_URL}?page=dapi&s=tag&q=index&names=${encodedTags}&json=1&api_key=${GELBOORU_API_KEY}&user_id=${GELBOORU_UID}`;
 };
 
 const ARTIST_TAG_TYPE = 1;

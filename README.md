@@ -35,7 +35,7 @@ Create a `.env` file in the project root with the following variables:
 # Required
 BOT_TOKEN=your_telegram_bot_token
 AUTHOR_ID=your_telegram_user_id
-TARGET_CHANNEL=@your_channel_username
+TARGET_CHANNEL=your_channel_id
 USER_AGENT=TG-TAGGER/1.0
 
 # Optional - for reverse image search

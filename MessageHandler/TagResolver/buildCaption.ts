@@ -16,7 +16,7 @@ const escapeMarkdown = (text: string): string =>
  * Sanitizes a tag by removing special characters that shouldn't be in tags
  */
 const sanitizeTag = (tag: string): string =>
-  tag.replace(/[:=]/g, "").replace(/-/g, "_");
+  tag.replace(/[:=.]/g, "").replace(/-/g, "_");
 
 /**
  * Formats a list of tags with proper escaping and sanitization

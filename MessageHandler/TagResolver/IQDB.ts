@@ -1,4 +1,4 @@
-import searchPic, { type IQDBSearchResultItem } from "iqdb-client";
+import { searchPic, type IQDBSearchResultItem } from "iqdb-client";
 import type { Readable } from "node:stream";
 
 import { fetchDanbooruInfo } from "./Danbooru/fetchDanbooruInfo";

@@ -37,7 +37,7 @@ declare module "iqdb-client" {
     options: { lib: string; forcegray?: boolean; fileName?: string; service?: number[] }
   ) => Promise<IQDBSearchResult>;
 
-  export default function searchPic(
+  export function searchPic(
     pic: string | Buffer | Readable,
     options: { lib: string; forcegray?: boolean; fileName?: string; service?: number[] }
   ): Promise<IQDBSearchResult>;

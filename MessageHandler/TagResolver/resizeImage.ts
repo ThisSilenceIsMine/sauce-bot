@@ -1,4 +1,4 @@
-import { Transformer } from '@napi-rs/image';
+import { Transformer, ResizeFit } from '@napi-rs/image';
 import { Readable } from 'stream';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -50,32 +50,31 @@ export const resizeImageToTelegramLimit = async (
 
     console.log('Image does not meet all Telegram requirements, resizing...');
 
-    let newWidth = metadata.width;
-    let newHeight = metadata.height;
+    let targetWidth = metadata.width;
     let resizeAttempts = 0;
     const maxAttempts = 15;
 
     console.log(
-      `Starting resize: ${newWidth}x${newHeight} (aspect ratio: ${aspectRatio.toFixed(3)})`
+      `Starting resize: ${metadata.width}x${metadata.height} (aspect ratio: ${aspectRatio.toFixed(3)})`
     );
 
     while (resizeAttempts < maxAttempts) {
       resizeAttempts++;
 
-      newWidth = Math.floor(newWidth * 0.9);
-      newHeight = Math.floor(newHeight * 0.9);
+      targetWidth = Math.floor(targetWidth * 0.9);
+      const targetHeight = Math.floor(targetWidth / aspectRatio);
 
-      console.log(`Resize attempt ${resizeAttempts}: ${newWidth}x${newHeight}`);
+      console.log(`Resize attempt ${resizeAttempts}: ${targetWidth}x${targetHeight}`);
 
       try {
         const resized = await new Transformer(imageBuffer)
-          .resize(newWidth, newHeight)
+          .fastResize({ width: targetWidth, height: targetHeight, fit: ResizeFit.Inside })
           .jpeg(85);
 
         const resizedSize = resized.length;
-        const resizedAspectRatio = newWidth / newHeight;
-        const resizedReverseAspectRatio = newHeight / newWidth;
-        const resizedWidthHeightSum = newWidth + newHeight;
+        const resizedWidthHeightSum = targetWidth + targetHeight;
+        const resizedAspectRatio = targetWidth / targetHeight;
+        const resizedReverseAspectRatio = targetHeight / targetWidth;
 
         const meetsResizedSizeLimit = resizedSize <= MAX_FILE_SIZE;
         const meetsResizedDimensionLimit =
@@ -85,7 +84,7 @@ export const resizeImageToTelegramLimit = async (
           resizedReverseAspectRatio <= MAX_ASPECT_RATIO;
 
         console.log(
-          `Resize attempt ${resizeAttempts} result: ${resizedSize / 1024 / 1024}MB, ${newWidth}x${newHeight}, aspect: ${resizedAspectRatio.toFixed(2)}`
+          `Resize attempt ${resizeAttempts} result: ${resizedSize / 1024 / 1024}MB, ${targetWidth}x${targetHeight}, aspect: ${resizedAspectRatio.toFixed(2)}`
         );
         console.log('Resized image requirements check:', {
           fileSize: `${resizedSize / 1024 / 1024}MB (≤${MAX_FILE_SIZE / 1024 / 1024}MB): ${meetsResizedSizeLimit ? '✅' : '❌'}`,
@@ -99,14 +98,14 @@ export const resizeImageToTelegramLimit = async (
           meetsResizedAspectRatioLimit
         ) {
           console.log(
-            `Successfully resized to ${newWidth}x${newHeight} (${resizedSize / 1024 / 1024}MB)`
+            `Successfully resized to ${targetWidth}x${targetHeight} (${resizedSize / 1024 / 1024}MB)`
           );
           return Readable.from(resized);
         }
 
-        if (newWidth < MIN_WIDTH || newHeight < MIN_WIDTH) {
+        if (targetWidth < MIN_WIDTH || targetHeight < MIN_WIDTH) {
           console.error(
-            `Could not resize image enough to meet all Telegram requirements. Final size: ${newWidth}x${newHeight} (min: ${MIN_WIDTH})`
+            `Could not resize image enough to meet all Telegram requirements. Final size: ${targetWidth}x${targetHeight} (min: ${MIN_WIDTH})`
           );
           return null;
         }

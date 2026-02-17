@@ -1,5 +1,9 @@
-import sharp from 'sharp';
-import { Readable } from 'stream';
+import sharp from "sharp";
+import { Readable } from "stream";
+
+sharp.cache(false);
+
+sharp.concurrency(1);
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 const MIN_WIDTH = 800;
@@ -15,19 +19,19 @@ const MAX_ASPECT_RATIO = 20; // Telegram limit: width/height or height/width ≤
  * @returns A Readable stream of the resized image, or null if resizing failed
  */
 export const resizeImageToTelegramLimit = async (
-  imageBuffer: Buffer
+  imageBuffer: Buffer,
 ): Promise<Readable | null> => {
   try {
     const fileSize = imageBuffer.length;
     console.log(
-      `Processing image: ${fileSize / 1024 / 1024}MB (${fileSize} bytes)`
+      `Processing image: ${fileSize / 1024 / 1024}MB (${fileSize} bytes)`,
     );
 
     const image = sharp(imageBuffer);
-    console.log('Sharp instance created successfully');
+    console.log("Sharp instance created successfully");
 
     const metadata = await image.metadata();
-    console.log('Image metadata:', {
+    console.log("Image metadata:", {
       width: metadata.width,
       height: metadata.height,
       format: metadata.format,
@@ -40,7 +44,7 @@ export const resizeImageToTelegramLimit = async (
     });
 
     if (!metadata.width || !metadata.height) {
-      console.error('Could not get image dimensions from metadata');
+      console.error("Could not get image dimensions from metadata");
       return null;
     }
 
@@ -54,26 +58,26 @@ export const resizeImageToTelegramLimit = async (
     const meetsAspectRatioLimit =
       aspectRatio <= MAX_ASPECT_RATIO && reverseAspectRatio <= MAX_ASPECT_RATIO;
 
-    console.log('Telegram requirements check:', {
+    console.log("Telegram requirements check:", {
       fileSize: `${fileSize / 1024 / 1024}MB (≤${
         MAX_FILE_SIZE / 1024 / 1024
-      }MB): ${meetsSizeLimit ? '✅' : '❌'}`,
+      }MB): ${meetsSizeLimit ? "✅" : "❌"}`,
       widthHeightSum: `${widthHeightSum} (≤${MAX_WIDTH_HEIGHT_SUM}): ${
-        meetsDimensionLimit ? '✅' : '❌'
+        meetsDimensionLimit ? "✅" : "❌"
       }`,
       aspectRatio: `${aspectRatio.toFixed(2)} (≤${MAX_ASPECT_RATIO}): ${
-        meetsAspectRatioLimit ? '✅' : '❌'
+        meetsAspectRatioLimit ? "✅" : "❌"
       }`,
     });
 
     if (meetsSizeLimit && meetsDimensionLimit && meetsAspectRatioLimit) {
       // If all requirements met, return as stream directly
-      console.log('Image meets all Telegram requirements, returning original');
+      console.log("Image meets all Telegram requirements, returning original");
       return Readable.from(imageBuffer);
     }
 
     // If any requirement not met, resize with Sharp
-    console.log('Image does not meet all Telegram requirements, resizing...');
+    console.log("Image does not meet all Telegram requirements, resizing...");
 
     // Calculate new dimensions while maintaining aspect ratio and meeting all limits
     let newWidth = metadata.width;
@@ -83,8 +87,8 @@ export const resizeImageToTelegramLimit = async (
 
     console.log(
       `Starting resize: ${newWidth}x${newHeight} (aspect ratio: ${aspectRatio.toFixed(
-        3
-      )})`
+        3,
+      )})`,
     );
 
     // Gradually reduce size until all requirements are met
@@ -119,20 +123,20 @@ export const resizeImageToTelegramLimit = async (
           `Resize attempt ${resizeAttempts} result: ${
             resizedSize / 1024 / 1024
           }MB, ${newWidth}x${newHeight}, aspect: ${resizedAspectRatio.toFixed(
-            2
-          )}`
+            2,
+          )}`,
         );
-        console.log('Resized image requirements check:', {
+        console.log("Resized image requirements check:", {
           fileSize: `${resizedSize / 1024 / 1024}MB (≤${
             MAX_FILE_SIZE / 1024 / 1024
-          }MB): ${meetsResizedSizeLimit ? '✅' : '❌'}`,
+          }MB): ${meetsResizedSizeLimit ? "✅" : "❌"}`,
           widthHeightSum: `${resizedWidthHeightSum} (≤${MAX_WIDTH_HEIGHT_SUM}): ${
-            meetsResizedDimensionLimit ? '✅' : '❌'
+            meetsResizedDimensionLimit ? "✅" : "❌"
           }`,
           aspectRatio: `${resizedAspectRatio.toFixed(
-            2
+            2,
           )} (≤${MAX_ASPECT_RATIO}): ${
-            meetsResizedAspectRatioLimit ? '✅' : '❌'
+            meetsResizedAspectRatioLimit ? "✅" : "❌"
           }`,
         });
 
@@ -144,7 +148,7 @@ export const resizeImageToTelegramLimit = async (
           console.log(
             `Successfully resized to ${newWidth}x${newHeight} (${
               resizedSize / 1024 / 1024
-            }MB)`
+            }MB)`,
           );
           return Readable.from(resized);
         }
@@ -152,7 +156,7 @@ export const resizeImageToTelegramLimit = async (
         // If dimensions get too small, give up
         if (newWidth < MIN_WIDTH || newHeight < MIN_WIDTH) {
           console.error(
-            `Could not resize image enough to meet all Telegram requirements. Final size: ${newWidth}x${newHeight} (min: ${MIN_WIDTH})`
+            `Could not resize image enough to meet all Telegram requirements. Final size: ${newWidth}x${newHeight} (min: ${MIN_WIDTH})`,
           );
           return null;
         }
@@ -165,11 +169,11 @@ export const resizeImageToTelegramLimit = async (
     console.error(`Failed to resize image after ${maxAttempts} attempts`);
     return null;
   } catch (error) {
-    console.error('Error in resizeImageToTelegramLimit:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
+    console.error("Error in resizeImageToTelegramLimit:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
-      bufferLength: imageBuffer?.length || 'undefined',
+      bufferLength: imageBuffer?.length || "undefined",
     });
     return null;
   }

@@ -10,7 +10,7 @@ export const sendRateLimitInfo = async (
     shortLimit: number;
     longRemaining: number;
     longLimit: number;
-  }
+  },
 ) => {
   await bot.sendMessage(
     chatId,
@@ -18,14 +18,14 @@ export const sendRateLimitInfo = async (
       "Rate limits (remaining/limit):",
       `Short (30s): ${rateLimitInfo.shortRemaining}/${rateLimitInfo.shortLimit}`,
       `Long (24h): ${rateLimitInfo.longRemaining}/${rateLimitInfo.longLimit}`,
-    ].join("\n")
+    ].join("\n"),
   );
 };
 
 export const sendPostConfirmation = async (
   chatId: number,
   bot: TelegramBot,
-  caption: string
+  caption: string,
 ) => {
   await bot.sendMessage(chatId, `Tagged & posted: ${caption}`, {
     parse_mode: "Markdown",
@@ -37,7 +37,7 @@ export const postToChannel = async (
   bot: TelegramBot,
   fileIdOrStream: string | Readable | Buffer,
   caption: string,
-  hasSpoiler?: boolean
+  hasSpoiler?: boolean,
 ) => {
   await bot.sendPhoto(process.env.TARGET_CHANNEL!, fileIdOrStream, {
     caption,
@@ -48,22 +48,21 @@ export const postToChannel = async (
 
 export const postVideoToChannel = async (
   bot: TelegramBot,
-  video: Buffer,
+  videoUrl: string,
   caption: string,
-  hasSpoiler?: boolean
+  hasSpoiler?: boolean,
 ) => {
-  await bot.sendVideo(process.env.TARGET_CHANNEL!, video, {
+  await bot.sendVideo(process.env.TARGET_CHANNEL!, videoUrl, {
     caption,
     has_spoiler: hasSpoiler,
     parse_mode: "Markdown",
-    supports_streaming: true,
   });
 };
 
 export const isNSFW = (rating?: PostRating) =>
   rating
     ? ([PostRating.Questionable, PostRating.Explicit] as PostRating[]).includes(
-        rating
+        rating,
       )
     : false;
 
@@ -81,7 +80,7 @@ export const isCensorshipEnabled = (): boolean => {
  */
 export const shouldMarkAsSpoiler = (
   hasMediaSpoiler: boolean | undefined,
-  rating?: PostRating
+  rating?: PostRating,
 ): boolean => {
   // Always respect manual spoiler flag
   if (hasMediaSpoiler) {

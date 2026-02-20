@@ -2,7 +2,7 @@ import type { Message } from "node-telegram-bot-api";
 import type TelegramBot from "node-telegram-bot-api";
 import { ContentType } from "../getContentType";
 import { fetchDanbooruInfo } from "../TagResolver/Danbooru/fetchDanbooruInfo";
-import { fetchImageStream, fetchVideoBuffer } from "../TagResolver/fetchImageURL";
+import { fetchImageStream } from "../TagResolver/fetchImageURL";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
 import {
@@ -39,14 +39,7 @@ export class DanbooruHandler implements ContentHandler {
     console.log("Danbooru caption, postInfo", caption, postInfo);
 
     if (postInfo.isVideo) {
-      const videoBuffer = await fetchVideoBuffer(postInfo.imageUrl);
-
-      if (!videoBuffer) {
-        await bot.sendMessage(chatId, "Failed to download video");
-        return { error: "Failed to download video" };
-      }
-
-      await postVideoToChannel(bot, videoBuffer, caption, spoiler);
+      await postVideoToChannel(bot, postInfo.imageUrl, caption, spoiler);
     } else {
       const imageStream = await fetchImageStream(postInfo.imageUrl);
 

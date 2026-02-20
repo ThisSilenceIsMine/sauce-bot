@@ -2,12 +2,13 @@ import type { Message } from "node-telegram-bot-api";
 import type TelegramBot from "node-telegram-bot-api";
 import { ContentType } from "../getContentType";
 import { fetchDanbooruInfo } from "../TagResolver/Danbooru/fetchDanbooruInfo";
-import { fetchImageStream } from "../TagResolver/fetchImageURL";
+import { fetchImageStream, fetchVideoBuffer } from "../TagResolver/fetchImageURL";
 import { buildCaption } from "../TagResolver/buildCaption";
 import type { ContentHandler, PostResult } from "../types";
 import {
   sendPostConfirmation,
   postToChannel,
+  postVideoToChannel,
   shouldMarkAsSpoiler,
 } from "../utils";
 
@@ -32,21 +33,30 @@ export class DanbooruHandler implements ContentHandler {
 
     console.log("postInfo", postInfo);
 
-    const imageStream = await fetchImageStream(postInfo.imageUrl);
-
-    if (!imageStream) {
-      await bot.sendMessage(chatId, "Failed to create image stream");
-      return { error: "Failed to create image stream" };
-    }
-
     const caption = buildCaption(postInfo);
+    const spoiler = shouldMarkAsSpoiler(msg.has_media_spoiler, postInfo.rating);
 
     console.log("Danbooru caption, postInfo", caption, postInfo);
 
-    // Check if the message has a spoiler flag or if the post has a NSFW rating
-    let spoiler = shouldMarkAsSpoiler(msg.has_media_spoiler, postInfo.rating);
+    if (postInfo.isVideo) {
+      const videoBuffer = await fetchVideoBuffer(postInfo.imageUrl);
 
-    await postToChannel(bot, imageStream, caption, spoiler);
+      if (!videoBuffer) {
+        await bot.sendMessage(chatId, "Failed to download video");
+        return { error: "Failed to download video" };
+      }
+
+      await postVideoToChannel(bot, videoBuffer, caption, spoiler);
+    } else {
+      const imageStream = await fetchImageStream(postInfo.imageUrl);
+
+      if (!imageStream) {
+        await bot.sendMessage(chatId, "Failed to create image stream");
+        return { error: "Failed to create image stream" };
+      }
+
+      await postToChannel(bot, imageStream, caption, spoiler);
+    }
 
     await sendPostConfirmation(chatId, bot, caption);
 

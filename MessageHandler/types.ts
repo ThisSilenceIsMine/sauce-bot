@@ -25,12 +25,14 @@ export interface RateLimitInfo {
 export interface PostInfo {
   authors: string[];
   characters: string[];
-  /** Highest‑res image URL available (original if possible) */
+  /** Highest‑res media URL available (original if possible) */
   imageUrl: string;
-  /** The URL of the post on Danbooru */
+  /** The URL of the post on the booru */
   postUrl: string;
   /** Rating of the post */
   rating: PostRating;
+  /** Whether the post is a video (mp4/webm) */
+  isVideo?: boolean;
 }
 
 export interface MessageHandler {

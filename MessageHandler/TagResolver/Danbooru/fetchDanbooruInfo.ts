@@ -4,6 +4,8 @@ import { PostRating } from "../../types";
 import { formatTags } from "../../utils";
 import { type DanbooruAPIPost } from "./types";
 
+const VIDEO_EXTENSIONS = new Set(["mp4", "webm"]);
+
 export const fetchDanbooruInfo = async (
   url: string
 ): Promise<PostInfo | null> => {
@@ -20,7 +22,8 @@ export const fetchDanbooruInfo = async (
     console.log("fetching danbooru info", apiUrl);
     const { data } = await api.get<DanbooruAPIPost>(apiUrl);
 
-    // Prefer the original; fall back to the largest sample.
+    const isVideo = VIDEO_EXTENSIONS.has(data.file_ext);
+
     let imageUrl = [
       data.file_url,
       data.large_file_url,
@@ -30,17 +33,15 @@ export const fetchDanbooruInfo = async (
     ].find((url: string | null) => url);
 
     if (!imageUrl) {
-      console.log("No suitable image URL found");
+      console.log("No suitable media URL found");
       return null;
     }
 
-    // Normalise protocol‑relative/relative paths
     if (imageUrl.startsWith("//")) imageUrl = `https:${imageUrl}`;
     if (imageUrl.startsWith("/"))
       imageUrl = `https://danbooru.donmai.us${imageUrl}`;
 
-    // Extract rating with error handling
-    let rating: PostRating = PostRating.General; // Default to safe if rating is missing
+    let rating: PostRating = PostRating.General;
     try {
       if (data.rating && Object.values(PostRating).includes(data.rating)) {
         rating = data.rating;
@@ -59,6 +60,7 @@ export const fetchDanbooruInfo = async (
       imageUrl,
       postUrl: `https://danbooru.donmai.us/posts/${postId}`,
       rating,
+      isVideo,
     };
   } catch (err) {
     console.log("Danbooru API error:", err);

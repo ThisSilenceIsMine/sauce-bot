@@ -46,6 +46,20 @@ export const postToChannel = async (
   });
 };
 
+export const postVideoToChannel = async (
+  bot: TelegramBot,
+  video: Buffer,
+  caption: string,
+  hasSpoiler?: boolean
+) => {
+  await bot.sendVideo(process.env.TARGET_CHANNEL!, video, {
+    caption,
+    has_spoiler: hasSpoiler,
+    parse_mode: "Markdown",
+    supports_streaming: true,
+  });
+};
+
 export const isNSFW = (rating?: PostRating) =>
   rating
     ? ([PostRating.Questionable, PostRating.Explicit] as PostRating[]).includes(

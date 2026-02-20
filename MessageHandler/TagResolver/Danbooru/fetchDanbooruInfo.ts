@@ -6,6 +6,9 @@ import { type DanbooruAPIPost } from "./types";
 
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm"]);
 
+const isVideoExtension = (url: string) =>
+  VIDEO_EXTENSIONS.has(url.split(".").pop()?.toLowerCase() ?? "");
+
 export const fetchDanbooruInfo = async (
   url: string
 ): Promise<PostInfo | null> => {
@@ -22,15 +25,34 @@ export const fetchDanbooruInfo = async (
     console.log("fetching danbooru info", apiUrl);
     const { data } = await api.get<DanbooruAPIPost>(apiUrl);
 
-    const isVideo = VIDEO_EXTENSIONS.has(data.file_ext);
+    const isVideo =
+      VIDEO_EXTENSIONS.has(data.file_ext) || data.media_asset.duration != null;
 
-    let imageUrl = [
-      data.file_url,
-      data.large_file_url,
-      ...data.media_asset.variants
-        .filter((variant) => variant.type === "original")
-        .map((variant) => variant.url),
-    ].find((url: string | null) => url);
+    let imageUrl: string | undefined;
+
+    if (isVideo) {
+      const videoVariant = data.media_asset.variants.find(
+        (v) => VIDEO_EXTENSIONS.has(v.file_ext)
+      );
+
+      imageUrl = [
+        data.large_file_url,
+        videoVariant?.url,
+        data.file_url,
+      ]
+        .filter((u): u is string => !!u)
+        .find(isVideoExtension);
+    }
+
+    if (!imageUrl) {
+      imageUrl = [
+        data.file_url,
+        data.large_file_url,
+        ...data.media_asset.variants
+          .filter((variant) => variant.type === "original")
+          .map((variant) => variant.url),
+      ].find((url: string | null) => url) ?? undefined;
+    }
 
     if (!imageUrl) {
       console.log("No suitable media URL found");

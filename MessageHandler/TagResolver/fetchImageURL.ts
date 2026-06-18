@@ -2,8 +2,13 @@ import { api } from "../api";
 import { Readable } from "stream";
 import { resizeImageToTelegramLimit } from "./resizeImage";
 
+export interface FetchImageStreamOptions {
+  headers?: Record<string, string>;
+}
+
 export const fetchImageStream = async (
-  imageUrl: string
+  imageUrl: string,
+  options: FetchImageStreamOptions = {}
 ): Promise<Readable | null> => {
   try {
     console.log("Downloading image from URL:", imageUrl);
@@ -13,17 +18,27 @@ export const fetchImageStream = async (
       timeout: 30000,
       maxContentLength: 50 * 1024 * 1024,
       maxBodyLength: 50 * 1024 * 1024,
+      headers: options.headers,
     });
+
+    const contentType = response.headers["content-type"] as string | undefined;
 
     console.log("Image download completed:", {
       status: response.status,
       contentLength: response.headers["content-length"],
-      contentType: response.headers["content-type"],
+      contentType,
       bufferSize: response.data.length,
     });
 
     if (!response.data || response.data.length === 0) {
       console.error("Downloaded image buffer is empty");
+      return null;
+    }
+
+    if (contentType && !contentType.toLowerCase().startsWith("image/")) {
+      console.error(
+        `Unexpected content-type "${contentType}" for ${imageUrl}; server likely returned an HTML/error page (hotlink protection?). Aborting.`
+      );
       return null;
     }
 

@@ -33,7 +33,11 @@ export class GelbooruHandler implements ContentHandler {
     }
 
     console.log("fetching image stream");
-    const imageStream = await fetchImageStream(postInfo.imageUrl);
+    const imageStream = await fetchImageStream(postInfo.imageUrl, {
+      headers: {
+        Referer: "https://gelbooru.com/",
+      },
+    });
 
     console.log("imageStream", imageStream);
 

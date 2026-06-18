@@ -5,168 +5,101 @@ sharp.cache(false);
 
 sharp.concurrency(1);
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
-const MIN_WIDTH = 800;
-const MAX_WIDTH_HEIGHT_SUM = 10000; // Telegram limit: width + height ≤ 10000
-const MAX_ASPECT_RATIO = 20; // Telegram limit: width/height or height/width ≤ 20
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_WIDTH_HEIGHT_SUM = 10000;
+const MAX_ASPECT_RATIO = 20;
+const JPEG_QUALITY_STEPS = [85, 75, 60, 45];
+
+const formatMB = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)}MB`;
 
 /**
- * Resizes an image buffer to fit within Telegram's limits:
+ * Resizes an image buffer to fit within Telegram's photo limits:
  * - File size ≤ 10MB
  * - Width + Height ≤ 10000
  * - Aspect ratio ≤ 20
- * @param imageBuffer The original image buffer
- * @returns A Readable stream of the resized image, or null if resizing failed
+ *
+ * Computes the target dimensions in one shot from the constraint
+ * (width+height ≤ 10000) instead of iteratively shrinking, which kept
+ * decoding multi-megapixel PNGs and OOM-killed the container.
  */
 export const resizeImageToTelegramLimit = async (
   imageBuffer: Buffer,
 ): Promise<Readable | null> => {
   try {
     const fileSize = imageBuffer.length;
-    console.log(
-      `Processing image: ${fileSize / 1024 / 1024}MB (${fileSize} bytes)`,
-    );
+    console.log(`Processing image: ${formatMB(fileSize)} (${fileSize} bytes)`);
 
-    const image = sharp(imageBuffer);
-    console.log("Sharp instance created successfully");
-
-    const metadata = await image.metadata();
+    const metadata = await sharp(imageBuffer).metadata();
     console.log("Image metadata:", {
       width: metadata.width,
       height: metadata.height,
       format: metadata.format,
       space: metadata.space,
       channels: metadata.channels,
-      depth: metadata.depth,
-      density: metadata.density,
-      hasProfile: metadata.hasProfile,
       hasAlpha: metadata.hasAlpha,
     });
 
-    if (!metadata.width || !metadata.height) {
+    const { width, height } = metadata;
+    if (!width || !height) {
       console.error("Could not get image dimensions from metadata");
       return null;
     }
 
-    // Check if image already meets all Telegram requirements
-    const aspectRatio = metadata.width / metadata.height;
-    const reverseAspectRatio = metadata.height / metadata.width;
-    const widthHeightSum = metadata.width + metadata.height;
+    const aspectRatio = width / height;
+    const reverseAspectRatio = height / width;
+    const widthHeightSum = width + height;
 
-    const meetsSizeLimit = fileSize <= MAX_FILE_SIZE;
-    const meetsDimensionLimit = widthHeightSum <= MAX_WIDTH_HEIGHT_SUM;
-    const meetsAspectRatioLimit =
-      aspectRatio <= MAX_ASPECT_RATIO && reverseAspectRatio <= MAX_ASPECT_RATIO;
+    if (
+      aspectRatio > MAX_ASPECT_RATIO ||
+      reverseAspectRatio > MAX_ASPECT_RATIO
+    ) {
+      console.error(
+        `Aspect ratio ${aspectRatio.toFixed(2)} exceeds Telegram limit ${MAX_ASPECT_RATIO}; cannot post`,
+      );
+      return null;
+    }
 
-    console.log("Telegram requirements check:", {
-      fileSize: `${fileSize / 1024 / 1024}MB (≤${
-        MAX_FILE_SIZE / 1024 / 1024
-      }MB): ${meetsSizeLimit ? "✅" : "❌"}`,
-      widthHeightSum: `${widthHeightSum} (≤${MAX_WIDTH_HEIGHT_SUM}): ${
-        meetsDimensionLimit ? "✅" : "❌"
-      }`,
-      aspectRatio: `${aspectRatio.toFixed(2)} (≤${MAX_ASPECT_RATIO}): ${
-        meetsAspectRatioLimit ? "✅" : "❌"
-      }`,
-    });
-
-    if (meetsSizeLimit && meetsDimensionLimit && meetsAspectRatioLimit) {
-      // If all requirements met, return as stream directly
+    if (fileSize <= MAX_FILE_SIZE && widthHeightSum <= MAX_WIDTH_HEIGHT_SUM) {
       console.log("Image meets all Telegram requirements, returning original");
       return Readable.from(imageBuffer);
     }
 
-    // If any requirement not met, resize with Sharp
-    console.log("Image does not meet all Telegram requirements, resizing...");
-
-    // Calculate new dimensions while maintaining aspect ratio and meeting all limits
-    let newWidth = metadata.width;
-    let newHeight = metadata.height;
-    let resizeAttempts = 0;
-    const maxAttempts = 15; // Increased attempts for more complex requirements
+    let targetWidth = width;
+    let targetHeight = height;
+    if (widthHeightSum > MAX_WIDTH_HEIGHT_SUM) {
+      const scale = MAX_WIDTH_HEIGHT_SUM / widthHeightSum;
+      targetWidth = Math.floor(width * scale);
+      targetHeight = Math.floor(height * scale);
+    }
 
     console.log(
-      `Starting resize: ${newWidth}x${newHeight} (aspect ratio: ${aspectRatio.toFixed(
-        3,
-      )})`,
+      `Resizing ${width}x${height} → ${targetWidth}x${targetHeight} (sum ${targetWidth + targetHeight})`,
     );
 
-    // Gradually reduce size until all requirements are met
-    while (resizeAttempts < maxAttempts) {
-      resizeAttempts++;
+    const needsResize = targetWidth !== width || targetHeight !== height;
 
-      // Reduce dimensions by 10% each attempt
-      newWidth = Math.floor(newWidth * 0.9);
-      newHeight = Math.floor(newHeight * 0.9);
-
-      console.log(`Resize attempt ${resizeAttempts}: ${newWidth}x${newHeight}`);
-
-      try {
-        const resized = await image
-          .resize(newWidth, newHeight)
-          .jpeg({ quality: 85 })
-          .toBuffer();
-
-        const resizedSize = resized.length;
-        const resizedAspectRatio = newWidth / newHeight;
-        const resizedReverseAspectRatio = newHeight / newWidth;
-        const resizedWidthHeightSum = newWidth + newHeight;
-
-        const meetsResizedSizeLimit = resizedSize <= MAX_FILE_SIZE;
-        const meetsResizedDimensionLimit =
-          resizedWidthHeightSum <= MAX_WIDTH_HEIGHT_SUM;
-        const meetsResizedAspectRatioLimit =
-          resizedAspectRatio <= MAX_ASPECT_RATIO &&
-          resizedReverseAspectRatio <= MAX_ASPECT_RATIO;
-
-        console.log(
-          `Resize attempt ${resizeAttempts} result: ${
-            resizedSize / 1024 / 1024
-          }MB, ${newWidth}x${newHeight}, aspect: ${resizedAspectRatio.toFixed(
-            2,
-          )}`,
-        );
-        console.log("Resized image requirements check:", {
-          fileSize: `${resizedSize / 1024 / 1024}MB (≤${
-            MAX_FILE_SIZE / 1024 / 1024
-          }MB): ${meetsResizedSizeLimit ? "✅" : "❌"}`,
-          widthHeightSum: `${resizedWidthHeightSum} (≤${MAX_WIDTH_HEIGHT_SUM}): ${
-            meetsResizedDimensionLimit ? "✅" : "❌"
-          }`,
-          aspectRatio: `${resizedAspectRatio.toFixed(
-            2,
-          )} (≤${MAX_ASPECT_RATIO}): ${
-            meetsResizedAspectRatioLimit ? "✅" : "❌"
-          }`,
+    for (const quality of JPEG_QUALITY_STEPS) {
+      let pipeline = sharp(imageBuffer).rotate();
+      if (needsResize) {
+        pipeline = pipeline.resize(targetWidth, targetHeight, {
+          fit: "inside",
+          withoutEnlargement: true,
         });
+      }
 
-        if (
-          meetsResizedSizeLimit &&
-          meetsResizedDimensionLimit &&
-          meetsResizedAspectRatioLimit
-        ) {
-          console.log(
-            `Successfully resized to ${newWidth}x${newHeight} (${
-              resizedSize / 1024 / 1024
-            }MB)`,
-          );
-          return Readable.from(resized);
-        }
+      const out = await pipeline.jpeg({ quality }).toBuffer();
+      console.log(
+        `JPEG q=${quality}: ${formatMB(out.length)} at ${targetWidth}x${targetHeight}`,
+      );
 
-        // If dimensions get too small, give up
-        if (newWidth < MIN_WIDTH || newHeight < MIN_WIDTH) {
-          console.error(
-            `Could not resize image enough to meet all Telegram requirements. Final size: ${newWidth}x${newHeight} (min: ${MIN_WIDTH})`,
-          );
-          return null;
-        }
-      } catch (resizeError) {
-        console.error(`Resize attempt ${resizeAttempts} failed:`, resizeError);
-        // Continue to next attempt
+      if (out.length <= MAX_FILE_SIZE) {
+        return Readable.from(out);
       }
     }
 
-    console.error(`Failed to resize image after ${maxAttempts} attempts`);
+    console.error(
+      `Could not bring image under ${formatMB(MAX_FILE_SIZE)} even at lowest JPEG quality`,
+    );
     return null;
   } catch (error) {
     console.error("Error in resizeImageToTelegramLimit:", error);
